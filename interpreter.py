@@ -7,15 +7,14 @@ import re
 from _lexicon import LETTERS
 
 
-def _chars_in_str(list1, str2):
+def _chars_in_list(list1, list2):
     retset = []
     for val in list1:
-        retset += [m.start() for m in re.finditer(val, str2)]
+        retset += [i for i in range(len(list2)) if list2[i] == val]
     return retset
-    # return reduce(lambda v1,v2: v1 or v2, map(lambda v: v in list2, list1))
 
 
-class interpreter:
+class Interpreter:
 
     def calculate(self, glyph, y, x, dir, val):
         pass
@@ -44,25 +43,30 @@ class interpreter:
     #     return starts
 
     def _find_strand_starts(self, glyph):
-        pass
+        starts = []
+        for y in len(glyph):
+            for x in len(glyph[y]):
+                if letter in LETTERS[""]
+
 
     def _shave_glyph(self, glyph):
         "Remove starts and ends from a glyph and determine block level"
         level = 1
 
-        while 0 in _chars_in_str(self.get_symbol_by_name("start_glyph"),glyph[0]) and all(y[0] == ' ' for y in glyph):
+        while 0 in _chars_in_list(self.get_symbol_by_name("start_glyph"),glyph[0]) and all(y[0] == ' ' for y in glyph[1:]):
             level += 1
             glyph = [ln[1:] for ln in glyph]
-        glyph[0, 0] = ' '
+        glyph[0][0] = ' '
 
-        if glyph[len(glyph)-1,len(len(glyph-1))-1] == self.get_symbol_by_name("end_glyph"):
-            glyph[len(glyph)-1,len(len(glyph-1))-1] = ' '
+        # replace last glyph in array with a blank if it is an end_glyph
+        if glyph[-1][-1] in self.get_symbol_by_name("end_glyph"):
+            glyph[-1][-1] = ' '
         else:
             raise Exception("Could not find end glyph")
 
         return [glyph, level]
 
-    def interpret_glyph(self, glyph):
+    def interpret_glyph(self, glyph, level):
         starts = self._find_strand_starts(glyph)
         print(starts)
 
@@ -77,32 +81,44 @@ class interpreter:
         ends = []
         
         for y, ln in enumerate(program):
-            for x in _chars_in_str(self.get_symbol_by_name("start_glyph"), ln):
-                starts.append({"y":y, "x":x})
-            for x in _chars_in_str(self.get_symbol_by_name("end_glyph"), ln):
+            for x in _chars_in_list(self.get_symbol_by_name("start_glyph"), ln):
+                # make sure immediate left does not also have start symbol
+                if not ln[x-1] in self.get_symbol_by_name("start_glyph"):
+                    starts.append({"y":y, "x":x})
+            for x in _chars_in_list(self.get_symbol_by_name("end_glyph"), ln):
                 ends.append({"y":y, "x":x})
         
         for s in starts:
             for e in ends:
-                # blank to the left, blank below
 
                 if e["x"] <= s["x"] or e["y"] <= s["y"]:
                     continue
 
-                if (s["x"] == 0 \
-                    or all(c == ' ' for c in program[s["y"]-1:s["y"]])) and \
-                    (s["x"] == len(program)+1 or \
-                    all(c == ' ' for c in program[e["y"]+1][s["x"]:e["x"]+1])):
-                    
-                    glyph_locs.append({"start":s,"end":e})
+                # blank or beg of file above and not any horiz break in the middle
+                if (s["y"] == 0 or all(c == ' ' for c in program[s["y"]-1])) and \
+                    not any(all(c == ' ' for c in program[y]) for y in range(s["y"],e["y"])):
 
-        # some kind of check here: overlaps? re-used ends?
-                            
+                    # no col to the right or all blanks to the right and no vert break in the middle
+                    if (e["x"] == len(program)-1) or \
+                        (all(c == ' ' for c in [arr[e["x"]+1] if len(arr) > e["x"]+1 else ' ' for arr in program[s["y"]:e["y"]]])) and \
+                        not any(all(c == ' ' for c in [arr[x] if len(arr) > x else ' ' for arr in program[s["y"]:e["y"]]]) for x in range(s["x"],e["x"])):
+
+                        glyph_locs.append({"start":s,"end":e})
+
         return glyph_locs
+    
+    def _load_primes(self, glyphs):
+        self.primes = [1]
+        primes_to_count = max([len(i) for i in glyphs])
+        for num in range(2, primes_to_count ** 2):
+            if all(num%i!=0 for i in range(2,int(math.sqrt(num))+1)):
+                self.primes.append(num)
+                if len(self.primes) >= primes_to_count:
+                    break
     
     def interpret_program(self, program):
         # turn into a grid
-        program = program.splitlines()
+        program = [list(ln) for ln in program.splitlines()]
 
         glyph_locs = self._locate_glyphs(program)
 
@@ -114,9 +130,12 @@ class interpreter:
         for glyph in glyphs:
             level, glyph = self._shave_glyph(glyph)
             block_tree.append({"level":level, "glyph":glyph})
+
+        # now that we know the # of lines of the longest glyph, we calculate the primes for the whole list
+        self._load_primes(glyphs)
         
         for block in block_tree:
-            self.interpret_glyph(block["glyph"], block["level"])
+            self.interpret_glyph(block["level"], block["glyph"])
 
 
     def interpret_file(self, progfile, outfile, verbose):
@@ -125,17 +144,6 @@ class interpreter:
 
         with open(progfile, "r", encoding="utf-8") as file:
             self.interpret_program(file.read())
-
-
-interpreter.PRIMES_TO_COUNT = 100 # assume a glyph will not be taller than this
-# FIXME: we ought to count the size of glyphs on file input and then determine the size used
-
-interpreter.primes = [1]
-for num in range(2, interpreter.PRIMES_TO_COUNT ^ 2):
-    if all(num%i!=0 for i in range(2,int(math.sqrt(num))+1)):
-        interpreter.primes.append(num)
-        if len(interpreter.primes) > interpreter.PRIMES_TO_COUNT:
-            break
 
 
 if __name__ == "__main__":
@@ -151,7 +159,7 @@ if __name__ == "__main__":
                         default=False, help='verbose logging')
     args = parser.parse_args()
 
-    intr = interpreter()
+    intr = Interpreter()
     result = intr.interpret_file(args.progfile, args.outfile, args.verbose)
 
     if not args.outfile or args.verbose:

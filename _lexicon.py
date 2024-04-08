@@ -58,5 +58,17 @@ LETTERS = [
         "name":     "left_end",
         "facing":   ["left","right"],
         "flow":     ["straight","end"]
+    },
+    {
+        "symbol":   ["╵"],
+        "name":     "down_end",
+        "facing":   ["down"],
+        "flow":     ["straight","end"]
+    },
+    {
+        "symbol":   ["╵"],
+        "name":     "up_end",
+        "facing":   ["down"],
+        "flow":     ["straight","end"]
     }
 ]

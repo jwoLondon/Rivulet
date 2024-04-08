@@ -12,7 +12,7 @@
         //     "console": "integratedTerminal"
         // },
         {
-            "name": "Python Debugger: Revert Interpreter",
+            "name": "Python Debugger: Rivulet Interpreter",
             "type": "debugpy",
             "request": "launch",
             "program": "interpreter.py",
