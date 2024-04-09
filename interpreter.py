@@ -1,10 +1,11 @@
 from argparse import ArgumentParser
 from functools import reduce
 from operator import itemgetter
+import jmespath
+import json
 import math
 import os
 import re
-from _lexicon import LETTERS
 
 
 def _chars_in_list(list1, list2):
@@ -13,8 +14,18 @@ def _chars_in_list(list1, list2):
         retset += [i for i in range(len(list2)) if list2[i] == val]
     return retset
 
+OPPOSITE_DIR = {
+    "up": "down",
+    "down": "up",
+    "right": "left",
+    "left": "right"
+}
 
 class Interpreter:
+
+    def __init__(self):
+        with open('_lexicon.json') as lex:
+            self.lexicon = json.load(lex)
 
     def calculate(self, glyph, y, x, dir, val):
         pass
@@ -22,31 +33,88 @@ class Interpreter:
     def get_symbol_by_name(self, name:str):
         retlist = []
 
-        for ltr in LETTERS:
+        for ltr in self.lexicon:
             if ltr["name"] == name:
                 retlist += ltr["symbol"]
 
         return retlist
     
-    # def starting_places(self, glyph):
-    #     # find starting place for each strand
-    #     starts = []
 
-    #     for num, ln in enumerate(glyph):
-    #         for i, letter in enumerate(ln): 
-    #             if letter in interpreter.LETTERS["int_start"]["right"] and (num == 0 or glyph[num-1][i] not in interpreter.LETTERS["up_cont"]):
-    #                 starts.append({"y": num, "x": i, "dir": "right"})
-    #             if letter in interpreter.LETTERS["int_start"]["left"] and (num == 0 or glyph[num-1][i] not in interpreter.LETTERS["up_cont"]):
-    #                 starts.append({"y": num, "x": i, "dir": "left"})
-    #             if letter in interpreter.LETTERS["int_start"]["down"] and (i == 0 or ln[i-1] not in interpreter.LETTERS["left_cont"]):
-    #                 starts.append({"y": num, "x": i, "dir": "down"})
-    #     return starts
+    def _get_neighbor(self, x, y, dir, glyph):
+        if dir == "up" and y > 0:
+            return glyph[y-1][x]
+        elif dir == "left" and x > 0:
+            return glyph[y][x-1]
+        elif dir == "down" and y < len(glyph)-1:
+            return glyph[y+1][x]
+        elif dir == "right" and x < len(glyph[y])-1:
+            # this assumes the glyph is a perfect rect
+            return glyph[y][x+1]
+
+    def _check_is_start(self, x, y, glyph):
+
+        symbol = jmespath.search(f"[?symbol.contains(@,`{glyph[y][x]}`)]", self.lexicon)
+
+        # symbol has no reading, ignore
+        if not symbol or len(symbol) == 0:
+            return
+        
+        readings = jmespath.search("[].readings[]", symbol)
+
+        # symbol has no starts, ignore
+        if not any(r["pos"] == "start" for r in readings):
+            return
+
+        # check that it has one but not both sides of a corner or a continue
+        successful_matches = []
+
+        # assuming only one reading of this kind
+        cont = [r for r in readings if r["pos"] == "corner" or r["pos"] == "continue"]
+
+        if not cont:
+            raise Exception("Internal Error: No corner or continue in start")
+
+        for dir in cont[0]["dir"]:
+            nbr = self._get_neighbor(x, y, dir, glyph)
+            if not nbr:
+                continue
+            nbr_reads = jmespath.search(f"[?symbol.contains(@,`{nbr}`)].readings[]", self.lexicon) 
+            if not nbr_reads:
+                continue
+            nbr_c_reads = [n for n in nbr_reads if n["pos"] == "corner" or n["pos"] == "continue"] #FIXME: Can this be done through jmespath so we don't do this twice?
+            if not nbr_c_reads:
+                continue
+
+            if OPPOSITE_DIR[dir] in nbr_c_reads[0]["dir"]:
+                successful_matches.append(dir)
+
+        if len(successful_matches) != 1:
+            return
+        
+        start_w_dir = [r for r in readings if r["pos"] == "start" and r["dir"] == successful_matches[0]]
+
+        if len(start_w_dir) != 1:
+            raise Exception(f"Internal Error: {len(start_w_dir)} dirs in a start where 1 was expected")
+        
+        return {
+            "symbol": symbol[0]["symbol"],
+            "name": symbol[0]["name"],
+            "x": x,
+            "y": y,
+            "dir": successful_matches[0],
+            "pos": "start",
+            "type": start_w_dir[0]["type"]
+        }
+
 
     def _find_strand_starts(self, glyph):
         starts = []
-        for y in len(glyph):
-            for x in len(glyph[y]):
-                if letter in LETTERS[""]
+        for y in range(0, len(glyph)):
+            for x in range(0, len(glyph[y])):
+                token = self._check_is_start(x, y, glyph)
+                if token:
+                    starts.append(token)
+        return starts
 
 
     def _shave_glyph(self, glyph):

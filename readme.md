@@ -1,3 +1,7 @@
+
+![Python versions](https://img.shields.io/badge/Python-3.12-blue)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+
 # Rivulet
 
 Rivulet is a language drawn in Unicode block-drawing characters. Each block of code is called a glyph. A glyph is drawn as a maze-like tangle of strands, each of which determines a command. Only the path of these strands are code; there are no keywords drawn from English or other natural languages.
@@ -25,10 +29,7 @@ Values are all assigned as ints. Floats are constructed through division. Ints c
 #### Command
 Most commands are nilads, a few are monads.
 
-#### Conditional
-The conditional is mandatory, but it does not always fire. For 
-
-If it fails, it will revert the glyph. This reversal is not the same thing as a transaction. If the program is going to print something to the screen, it will have printed that already. If it is 
+#### Conditional Rollback
 
 ### Other markers
 
