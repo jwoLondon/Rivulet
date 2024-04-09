@@ -14,7 +14,7 @@ zeroes_st_glyph = """
 zeroes_st_glyph = [list(ln) for ln in zeroes_st_glyph.splitlines()] # format
 zeroes_st_glyph = zeroes_st_glyph[1:] # remove first line
 
-def test__find_starts():
+def test_find_starts():
     intr = Interpreter()
     gl = copy.deepcopy(zeroes_st_glyph)
     starts = intr._find_strand_starts(gl)
@@ -34,3 +34,21 @@ def test__find_starts():
     assert(starts[5]["y"] == 2)
     assert(starts[6]["x"] == 11)
     assert(starts[6]["y"] == 2)
+
+fib_2_glyph = """
+╵╵╭─╶ ╮  ╭─┘╭─╶ 
+  │   │╭─┘╭─╯  
+  │╶╮ │╰─ │ 
+  ╰─┘ ╰───┘
+    ╮
+    │   
+"""
+
+fib_2_glyph = [list(ln) for ln in fib_2_glyph.splitlines()] # format
+fib_2_glyph = fib_2_glyph[1:] # remove first line
+
+def test__find_starts_w_ends():
+    intr = Interpreter()
+    gl = copy.deepcopy(fib_2_glyph)
+    starts = intr._find_strand_starts(gl)
+    print(starts)

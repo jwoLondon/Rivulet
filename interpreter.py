@@ -72,7 +72,7 @@ class Interpreter:
         cont = [r for r in readings if r["pos"] == "corner" or r["pos"] == "continue"]
 
         if not cont:
-            raise Exception("Internal Error: No corner or continue in start")
+            raise Exception(f"Internal Error: No corner or continue in start for {symbol[0]}")
 
         for dir in cont[0]["dir"]:
             nbr = self._get_neighbor(x, y, dir, glyph)
