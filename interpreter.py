@@ -151,6 +151,7 @@ class Interpreter:
         for y, ln in enumerate(program):
             for x in _chars_in_list(self.get_symbol_by_name("start_glyph"), ln):
                 # make sure immediate left does not also have start symbol
+                # FIXME: this should also determine the glyph's level
                 if not ln[x-1] in self.get_symbol_by_name("start_glyph"):
                     starts.append({"y":y, "x":x})
             for x in _chars_in_list(self.get_symbol_by_name("end_glyph"), ln):
@@ -211,7 +212,9 @@ class Interpreter:
         self.verbose = verbose
 
         with open(progfile, "r", encoding="utf-8") as file:
-            self.interpret_program(file.read())
+            program = file.read()
+
+        self.interpret_program(program)
 
 
 if __name__ == "__main__":
