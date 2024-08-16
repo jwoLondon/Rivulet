@@ -35,6 +35,15 @@ def test_find_starts():
     assert(starts[6]["x"] == 11)
     assert(starts[6]["y"] == 2)
 
+def test_lex_zeroes():
+    intr = Interpreter()
+    gl = copy.deepcopy(zeroes_st_glyph)
+    intr._load_primes([gl])
+    starts = intr.lex_glyph(gl, 1)
+    for s in starts:
+      assert(s["type"] == "value")
+      assert(s["value"] == 0)
+
 fib_2_glyph = """
 ╵╵╭─╶ ╮  ╭─┘╭─╶ 
   │   │╭─┘╭─╯  

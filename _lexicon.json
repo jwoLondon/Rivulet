@@ -145,11 +145,11 @@
         "readings": [
             {
                 "pos": "end",
-                "dir": "right"
+                "dir": "left"
             },
             {
                 "pos": "loc_marker",
-                "dir": "left",
+                "dir": "right",
                 "type": "loc_marker"
             }
         ]    
@@ -160,11 +160,11 @@
         "readings": [
             {
                 "pos": "end",
-                "dir": "left"
+                "dir": "right"
             },
             {
                 "pos": "loc_marker",
-                "dir": "right",
+                "dir": "left",
                 "type": "loc_marker"
             }
         ]    

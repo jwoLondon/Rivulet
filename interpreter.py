@@ -1,11 +1,8 @@
 from argparse import ArgumentParser
 from functools import reduce
-from operator import itemgetter
 import jmespath
 import json
 import math
-import os
-import re
 
 
 def _chars_in_list(list1, list2):
@@ -40,15 +37,23 @@ class Interpreter:
         return retlist
     
 
-    def _get_neighbor(self, x, y, dir, glyph):
+    def _get_neighbor(self, x, y, dir, glyph, include_coords=False):
         if dir == "up" and y > 0:
+            if include_coords:
+                return {"symbol": glyph[y-1][x], "x": x, "y": y-1}
             return glyph[y-1][x]
         elif dir == "left" and x > 0:
+            if include_coords:
+                return {"symbol": glyph[y][x-1], "x": x-1, "y": y}
             return glyph[y][x-1]
         elif dir == "down" and y < len(glyph)-1:
+            if include_coords:
+                return {"symbol": glyph[y+1][x], "x": x, "y": y+1}
             return glyph[y+1][x]
         elif dir == "right" and x < len(glyph[y])-1:
             # this assumes the glyph is a perfect rect
+            if include_coords:
+                return {"symbol": glyph[y][x+1], "x": x+1, "y": y}
             return glyph[y][x+1]
 
     def _check_is_start(self, x, y, glyph):
@@ -134,9 +139,100 @@ class Interpreter:
 
         return [glyph, level]
 
-    def interpret_glyph(self, glyph, level):
+
+
+    def _interpret_strand(self, glyph, prev, start):
+        """Recursively follow the data strand to determine if it is a value or ref strand and build out its value. Parameters:
+            glyph: the glyph matrix
+            prev: the current step's data (it will advance to the next step)
+            start: the start of the strand
+        This will modify the start object in place.
+        """
+        # At the beginning of a strand, prev is the hook which begins it (and never has any other reading).
+        # We already know the direction prev is pointing, so we can look for the next character in that direction and mark as curr.
+        curr = self._get_neighbor(prev["x"], prev["y"], prev["dir"], glyph, include_coords=True)
+
+        # next_dir is the direction AFTER curr
+        next_dir = False
+
+        # symbol is the lexicon entry for curr's character
+        symbol = jmespath.search(f"[?symbol.contains(@,`{curr['symbol']}`)]", self.lexicon)
+
+        if not symbol or len(symbol) == 0:
+            if (curr['symbol'] == ' '):
+                raise Exception(f"Internal Error: Blank space found at {curr['x']},{curr['y']}")
+            raise Exception(f"Internal Error: No symbol found for {curr['symbol']}")
+        if len(symbol) > 1:
+            raise Exception(f"Internal Error: More than one symbol found for {curr['symbol']}")
+
+        readings = {}
+        for r in jmespath.search("[].readings[]", symbol):
+            readings[r["pos"]] = r
+
+        if "continue" in readings or "corner" in readings:
+            # if it's for the matching direction
+            if OPPOSITE_DIR[prev['dir']] in r['dir']:
+                # remove entries from r['dir'] matching opposite of start['dir']
+                next_dir = set(r['dir']) - set([OPPOSITE_DIR[prev['dir']]])
+                if len(next_dir) != 1:
+                    raise Exception("Internal Error: More than one direction in next step")
+                next_dir = next_dir.pop()
+
+        # if it is moving left/right with a continue, add to value
+        if "continue" in readings and next_dir:
+
+            if not "value" in start:
+                start["value"] = 0
+
+            # if it's straight and left or right, we add or subtract the prime
+            if next_dir == 'right':
+                start['value'] += self.primes[curr["y"]]
+            elif next_dir == 'left':
+                start['value'] -= self.primes[curr["y"]]
+
+        # test for end
+        if "end" in readings or "loc_marker" in readings:
+            if next_dir:
+                # check if the strand ends here
+                following = self._get_neighbor(curr['x'], curr['y'], next_dir, glyph)
+                following = jmespath.search(f"[?symbol.contains(@,`{following}`)]", self.lexicon)
+
+            # if it's possible this is also a continue, we need to check if the next step is in the opposite direction, to rule out a "continuing" reading of the same symbol
+            # NOTE: We can't end on a corner or it would be a "hook" to start a strand
+            if next_dir:
+                opposite_dir_readings = len(jmespath.search(f"[].readings[].dir[?contains(@,'{OPPOSITE_DIR[next_dir]}')][]", following))
+            if not next_dir or not following or not ("continue" in readings and opposite_dir_readings > 0, following):
+                # if it's a value strand, we need to mark it as such
+                # check if the loc_marker reading has the right direction
+                if "loc_marker" in readings and OPPOSITE_DIR[prev['dir']] in readings["loc_marker"]['dir']:
+                    start['value'] = None
+                    start['type'] = "ref"
+                    start['end_x'] = curr['x']
+                    start['end_y'] = curr['y']
+                else:
+                    # mark the ref strand
+                    start['type'] = "value"
+
+                return
+            
+        # if it continues, load the next character
+        if ("continue" in readings or "corner" in readings) and next_dir:
+            curr["dir"] = next_dir
+            self._interpret_strand(glyph, curr, start)
+            return
+        
+        raise Exception(f"Internal Error: No valid reading found for char at {curr['x']},{curr['y']}")
+
+
+    def lex_glyph(self, glyph, level):
         starts = self._find_strand_starts(glyph)
-        print(starts)
+        for s in starts:
+            if s['type'] == 'data':
+                # we don't know yet if it is a value strand or ref strand
+                # print(s['dir']) # 'left', 'right', 'up', 'down'
+                self._interpret_strand(glyph, s, s)
+        return starts
+
 
     def _locate_glyphs(self, program):
         """find all the starts and ends where:
@@ -203,8 +299,13 @@ class Interpreter:
         # now that we know the # of lines of the longest glyph, we calculate the primes for the whole list
         self._load_primes(glyphs)
         
+        self.glyphs = []
         for block in block_tree:
-            self.interpret_glyph(block["level"], block["glyph"])
+            self.glyphs.append(self.lex_glyph(block["level"], block["glyph"]))
+
+        # debug
+        print(self.glyphs)
+
 
 
     def interpret_file(self, progfile, outfile, verbose):
