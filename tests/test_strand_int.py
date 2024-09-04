@@ -37,9 +37,9 @@ def test_find_starts():
 
 def test_lex_zeroes():
     intr = Interpreter()
-    gl = copy.deepcopy(zeroes_st_glyph)
-    intr._load_primes([gl])
-    starts = intr.lex_glyph(gl, 1)
+    gl = [{"glyph": copy.deepcopy(zeroes_st_glyph)}]
+    intr._load_primes(gl)
+    starts = intr.lex_glyph(gl[0]["glyph"], 1)
     for s in starts:
       assert(s["type"] == "value")
       assert(s["value"] == 0)

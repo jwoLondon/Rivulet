@@ -122,27 +122,6 @@ class Interpreter:
         return starts
 
 
-    def _shave_glyph(self, glyph):
-        "Remove starts and ends from a glyph and determine block level"
-        level = 1
-
-        while 0 in _chars_in_list(self.get_symbol_by_name("start_glyph"),glyph[0]) and all(y[0] == ' ' for y in glyph[1:]):
-            level += 1
-            glyph = [ln[1:] for ln in glyph]
-        glyph[0][0] = ' '
-
-        #FIXME: Does this work with deeper-level glyphs?
-
-        # replace last glyph in array with a blank if it is an end_glyph
-        if glyph[-1][-1] in self.get_symbol_by_name("end_glyph"):
-            glyph[-1][-1] = ' '
-        else:
-            raise Exception("Could not find end glyph")
-
-        return [glyph, level]
-
-
-
     def _interpret_strand(self, glyph, prev, start):
         """Recursively follow the data strand to determine build out its value and determine its subtype (value vs ref if data strand etc). Parameters:
             glyph: the glyph matrix
@@ -236,12 +215,12 @@ class Interpreter:
         return starts
 
     def _locate_glyphs(self, program):
-        """find all the Starts and Ends where:
+        """Find all the Starts and Ends where:
             - everything in the col left of Start down to End is blank
             - everything in the row below End back to Start is blank
             - the Start and End are not connected to other symbols
             - the Start and End are not on the same line
-          determine level of glyph
+          Determine level of glyph
         """
         glyph_locs = [] # return set
 
@@ -283,7 +262,7 @@ class Interpreter:
     
     def _load_primes(self, glyphs):
         self.primes = [1]
-        primes_to_count = max([len(i) for i in glyphs])
+        primes_to_count = max([len(i["glyph"]) for i in glyphs])
         for num in range(2, primes_to_count ** 2):
             if all(num%i!=0 for i in range(2,int(math.sqrt(num))+1)):
                 self.primes.append(num)
@@ -291,39 +270,47 @@ class Interpreter:
                     break
 
     def _remove_blank_lines(self, program):
-        "clear blank line at top or bottom"
+        "Clear blank lines from top and bottom of a multi-line string"
         if program[0] == [] or set(program[0]) == {' '}:
             program = program[1:]
         if program[-1] == [] or set(program[-1]) == {' '}:
             program = program[:-1]
         return program
     
+    def _prepare_glyphs_for_lexing(self, glyph_locs, program):
+        "Returns a set of individual glyphs, each with its level, with the Start and End symbols removed"
+        block_tree = []
+        for g in glyph_locs:
+            # isolate the glyph
+            glyph = [row[g["start"]["x"] - g["level"] + 1:g["end"]["x"]+1] for row in program[g["start"]["y"]:g["end"]["y"]+1]]
+
+            # remove the start and end symbols
+            for i in range(0, g["level"]):
+                glyph[0][i] = ' '
+            glyph[-1][-1] = ' '
+
+            block_tree.append({"level":g["level"], "glyph":glyph})
+
+        return block_tree
+
+    
     def interpret_program(self, program):
         # turn into a grid
         program = [list(ln) for ln in program.splitlines()]
 
         program = self._remove_blank_lines(program)
-
         glyph_locs = self._locate_glyphs(program)
-
-        glyphs = [] # each glyph as its own matrix
-        for g in glyph_locs:
-            glyphs.append([row[g["start"]["x"]:g["end"]["x"]+1] for row in program[g["start"]["y"]:g["end"]["y"]+1]])
-
-        block_tree = []
-        for glyph in glyphs:
-            level, glyph = self._shave_glyph(glyph)
-            block_tree.append({"level":level, "glyph":glyph})
+        glyphs = self._prepare_glyphs_for_lexing(glyph_locs, program)
 
         # now that we know the # of lines of the longest glyph, we calculate the primes for the whole list
         self._load_primes(glyphs)
         
-        self.glyphs = []
-        for block in block_tree:
-            self.glyphs.append(self.lex_glyph(block["level"], block["glyph"]))
+        for block in glyphs:
+            block["tokens"] = self.lex_glyph(block["glyph"])
 
         # debug
-        print(self.glyphs)
+        for glyph in glyphs:
+            print(f"tokens: {glyph["tokens"]}")
 
 
 

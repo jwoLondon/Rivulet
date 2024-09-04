@@ -28,19 +28,21 @@ def test_shave_zeroes_1():
     intr = Interpreter()
     gl = copy.deepcopy(zeroes_glyph)
     gl = intr._remove_blank_lines(gl)
-    glyph, level = intr._shave_glyph(gl)
-    assert(glyph[0][0] == ' ')
-    assert(glyph[-1][-1] == ' ')
-    assert(level == 1)
+    glyph_locs = intr._locate_glyphs(gl)
+    block_tree = intr._prepare_glyphs_for_lexing(glyph_locs, gl)
+    assert(block_tree[0]["glyph"][0][0] == ' ')
+    assert(block_tree[0]["glyph"][-1][-1] == ' ')
+    assert(block_tree[0]["level"] == 1)
 
 def test_shave_zeroes_2():
     intr = Interpreter()
     gl = copy.deepcopy(zeroes2_glyph)
     gl = intr._remove_blank_lines(gl)
-    glyph, level = intr._shave_glyph(gl)
-    assert(glyph[0][0] == ' ')
-    assert(glyph[-1][-1] == ' ')
-    assert(level == 2)
+    glyph_locs = intr._locate_glyphs(gl)
+    block_tree = intr._prepare_glyphs_for_lexing(glyph_locs, gl)
+    assert(block_tree[0]["glyph"][0][0] == ' ')
+    assert(block_tree[0]["glyph"][-1][-1] == ' ')
+    assert(block_tree[0]["level"] == 2)
 
 #----
     
@@ -158,6 +160,15 @@ def test_locate_two_glyphs():
     assert(glyph_locs[0]['end'] == {'y': 6, 'x': 21})
     assert(glyph_locs[1]['start'] == {'y': 0, 'x': 24})
     assert(glyph_locs[1]['end'] == {'y': 3, 'x': 40})
+
+def test_prepare_two_glyphs():
+    intr = Interpreter()
+    pr = copy.deepcopy(two_glyphs_prog)
+    pr = intr._remove_blank_lines(pr)
+    glyph_locs = intr._locate_glyphs(pr)
+    assert(len(glyph_locs) == 2)
+    block_tree = intr._prepare_glyphs_for_lexing(glyph_locs, pr)
+    assert(len(block_tree) == 2)
 
 def test_locate_three_glyphs():
     intr = Interpreter()
