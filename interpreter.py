@@ -131,6 +131,8 @@ class Interpreter:
             glyph = [ln[1:] for ln in glyph]
         glyph[0][0] = ' '
 
+        #FIXME: Does this work with deeper-level glyphs?
+
         # replace last glyph in array with a blank if it is an end_glyph
         if glyph[-1][-1] in self.get_symbol_by_name("end_glyph"):
             glyph[-1][-1] = ' '
@@ -142,7 +144,7 @@ class Interpreter:
 
 
     def _interpret_strand(self, glyph, prev, start):
-        """Recursively follow the data strand to determine if it is a value or ref strand and build out its value. Parameters:
+        """Recursively follow the data strand to determine build out its value and determine its subtype (value vs ref if data strand etc). Parameters:
             glyph: the glyph matrix
             prev: the current step's data (it will advance to the next step)
             start: the start of the strand
@@ -152,10 +154,12 @@ class Interpreter:
         # We already know the direction prev is pointing, so we can look for the next character in that direction and mark as curr.
         curr = self._get_neighbor(prev["x"], prev["y"], prev["dir"], glyph, include_coords=True)
 
-        # next_dir is the direction AFTER curr
+        #TODO: look at start["type"] to determine if data (value or ref), action, or question. currently assumes data
+
+        # next_dir is the direction curr continues onto its following character
         next_dir = False
 
-        # symbol is the lexicon entry for curr's character
+        # symbol is the metadata, pulled from the lexicon, for curr's character
         symbol = jmespath.search(f"[?symbol.contains(@,`{curr['symbol']}`)]", self.lexicon)
 
         if not symbol or len(symbol) == 0:
@@ -165,6 +169,7 @@ class Interpreter:
         if len(symbol) > 1:
             raise Exception(f"Internal Error: More than one symbol found for {curr['symbol']}")
 
+        # possible interpretations of the character
         readings = {}
         for r in jmespath.search("[].readings[]", symbol):
             readings[r["pos"]] = r
@@ -197,8 +202,8 @@ class Interpreter:
                 following = self._get_neighbor(curr['x'], curr['y'], next_dir, glyph)
                 following = jmespath.search(f"[?symbol.contains(@,`{following}`)]", self.lexicon)
 
-            # if it's possible this is also a continue, we need to check if the next step is in the opposite direction, to rule out a "continuing" reading of the same symbol
-            # NOTE: We can't end on a corner or it would be a "hook" to start a strand
+            # if it's possible this is also a continue, we need to check if the next step has a continuation or if this is really the end
+            # NOTE: We can't end on a corner or it would be a "hook" to start a strand (no strand can have a hook on both sides)
             if next_dir:
                 opposite_dir_readings = len(jmespath.search(f"[].readings[].dir[?contains(@,'{OPPOSITE_DIR[next_dir]}')][]", following))
             if not next_dir or not following or not ("continue" in readings and opposite_dir_readings > 0, following):
@@ -227,29 +232,33 @@ class Interpreter:
     def lex_glyph(self, glyph, level):
         starts = self._find_strand_starts(glyph)
         for s in starts:
-            if s['type'] == 'data':
-                # we don't know yet if it is a value strand or ref strand
-                # print(s['dir']) # 'left', 'right', 'up', 'down'
-                self._interpret_strand(glyph, s, s)
+            self._interpret_strand(glyph, s, s)
         return starts
 
-
     def _locate_glyphs(self, program):
-        """find all the starts and ends where:
-            - everything to the left of start up to row of end is blank
-            - everything to the bottom of end back to start is blank
+        """find all the Starts and Ends where:
+            - everything in the col left of Start down to End is blank
+            - everything in the row below End back to Start is blank
+            - the Start and End are not connected to other symbols
+            - the Start and End are not on the same line
+          determine level of glyph
         """
         glyph_locs = [] # return set
 
         starts = []
         ends = []
+        level = 1
         
         for y, ln in enumerate(program):
             for x in _chars_in_list(self.get_symbol_by_name("start_glyph"), ln):
-                # make sure immediate left does not also have start symbol
-                # FIXME: this should also determine the glyph's level
-                if not ln[x-1] in self.get_symbol_by_name("start_glyph"):
+                # make sure immediate right does not also have start symbol
+                if x != len(ln) - 1 and not ln[x+1] in self.get_symbol_by_name("start_glyph"):
                     starts.append({"y":y, "x":x})
+                    if x > 0 and ln[x-1] in self.get_symbol_by_name("start_glyph"):
+                        # find the level of the glyph by walking to the left
+                        for i in reversed(range(0, x)):
+                            if ln[i] in self.get_symbol_by_name("start_glyph"):
+                                level += 1
             for x in _chars_in_list(self.get_symbol_by_name("end_glyph"), ln):
                 ends.append({"y":y, "x":x})
         
@@ -264,11 +273,11 @@ class Interpreter:
                     not any(all(c == ' ' for c in program[y]) for y in range(s["y"],e["y"])):
 
                     # no col to the right or all blanks to the right and no vert break in the middle
-                    if (e["x"] == len(program)-1) or \
+                    if (e["y"] == len(program)-1) or \
                         (all(c == ' ' for c in [arr[e["x"]+1] if len(arr) > e["x"]+1 else ' ' for arr in program[s["y"]:e["y"]]])) and \
                         not any(all(c == ' ' for c in [arr[x] if len(arr) > x else ' ' for arr in program[s["y"]:e["y"]]]) for x in range(s["x"],e["x"])):
 
-                        glyph_locs.append({"start":s,"end":e})
+                        glyph_locs.append({"start":s,"end":e,"level":level})
 
         return glyph_locs
     
@@ -280,10 +289,20 @@ class Interpreter:
                 self.primes.append(num)
                 if len(self.primes) >= primes_to_count:
                     break
+
+    def _remove_blank_lines(self, program):
+        "clear blank line at top or bottom"
+        if program[0] == [] or set(program[0]) == {' '}:
+            program = program[1:]
+        if program[-1] == [] or set(program[-1]) == {' '}:
+            program = program[:-1]
+        return program
     
     def interpret_program(self, program):
         # turn into a grid
         program = [list(ln) for ln in program.splitlines()]
+
+        program = self._remove_blank_lines(program)
 
         glyph_locs = self._locate_glyphs(program)
 

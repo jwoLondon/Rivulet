@@ -1,0 +1,32 @@
+{
+    "default":
+        {"name": "addition_assignment",
+        "note": "add to location, set to zero by default"},
+    "0":
+        {"name": "overwrite",
+        "note": "assignment, overwriting existing value (rather than adding)"},
+    "1":
+        {"name": "",
+        "note": ""},
+    "-1": 
+        {"name": "subtraction_assignment",
+        "note": "add/subtract, similar to the default addition_assignment"},
+    "2":
+        {"name": "multiplication_assignment",
+        "note": "multiply by supplied argument"},
+    "-2": 
+        {"name": "division_assignment",
+        "note": "add/subtract, similar to the default addition_assignment"},
+    "3":
+        {"name": "",
+        "note": ""},
+    "-3":
+        {"name": "mod_assignment",
+        "note": "modulus against supplied argument"},
+    "4":
+        {"name": "exponentiation_assignment",
+        "note": "raise to power of supplied argument"},
+    "-4": 
+        {"name": "root_assignment",
+        "note": "take root at power of supplied argument"}
+}

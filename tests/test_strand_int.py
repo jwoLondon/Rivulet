@@ -43,21 +43,3 @@ def test_lex_zeroes():
     for s in starts:
       assert(s["type"] == "value")
       assert(s["value"] == 0)
-
-fib_2_glyph = """
-╵╵╭─╶ ╮  ╭─┘╭─╶ 
-  │   │╭─┘╭─╯  
-  │╶╮ │╰─ │ 
-  ╰─┘ ╰───┘
-    ╮
-    │   
-"""
-
-fib_2_glyph = [list(ln) for ln in fib_2_glyph.splitlines()] # format
-fib_2_glyph = fib_2_glyph[1:] # remove first line
-
-def test__find_starts_w_ends():
-    intr = Interpreter()
-    gl = copy.deepcopy(fib_2_glyph)
-    starts = intr._find_strand_starts(gl)
-    print(starts)
