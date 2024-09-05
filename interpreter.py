@@ -1,9 +1,12 @@
 from argparse import ArgumentParser
-from functools import reduce
-import jmespath
+# from functools import reduce
 import json
 import math
+import jmespath
+from riv_exceptions import InternalError #, RivuletSyntaxError
 
+
+VERSION = "0.1"
 
 def _chars_in_list(list1, list2):
     retset = []
@@ -19,13 +22,18 @@ OPPOSITE_DIR = {
 }
 
 class Interpreter:
+    "Full interpreter for the Rivulet esolang"
 
     def __init__(self):
-        with open('_lexicon.json') as lex:
+        with open('_lexicon.json', encoding='utf-8') as lex:
             self.lexicon = json.load(lex)
+        with open('_commands.json', encoding='utf-8') as cmds:
+            self.command_map = json.load(cmds)
 
-    def calculate(self, glyph, y, x, dir, val):
-        pass
+        self.primes = []
+        self.outfile = ""
+        self.verbose = ""
+
 
     def get_symbol_by_name(self, name:str):
         retlist = []
@@ -37,20 +45,20 @@ class Interpreter:
         return retlist
     
 
-    def _get_neighbor(self, x, y, dir, glyph, include_coords=False):
-        if dir == "up" and y > 0:
+    def _get_neighbor(self, x, y, dirtn, glyph, include_coords=False):
+        if dirtn == "up" and y > 0:
             if include_coords:
                 return {"symbol": glyph[y-1][x], "x": x, "y": y-1}
             return glyph[y-1][x]
-        elif dir == "left" and x > 0:
+        elif dirtn == "left" and x > 0:
             if include_coords:
                 return {"symbol": glyph[y][x-1], "x": x-1, "y": y}
             return glyph[y][x-1]
-        elif dir == "down" and y < len(glyph)-1:
+        elif dirtn == "down" and y < len(glyph)-1:
             if include_coords:
                 return {"symbol": glyph[y+1][x], "x": x, "y": y+1}
             return glyph[y+1][x]
-        elif dir == "right" and x < len(glyph[y])-1:
+        elif dirtn == "right" and x < len(glyph[y])-1:
             # this assumes the glyph is a perfect rect
             if include_coords:
                 return {"symbol": glyph[y][x+1], "x": x+1, "y": y}
@@ -63,7 +71,7 @@ class Interpreter:
         # symbol has no reading, ignore
         if not symbol or len(symbol) == 0:
             return
-        
+
         readings = jmespath.search("[].readings[]", symbol)
 
         # symbol has no starts, ignore
@@ -77,10 +85,10 @@ class Interpreter:
         cont = [r for r in readings if r["pos"] == "corner" or r["pos"] == "continue"]
 
         if not cont:
-            raise Exception(f"Internal Error: No corner or continue in start for {symbol[0]}")
+            raise InternalError(f"No corner or continue in start for {symbol[0]}")
 
-        for dir in cont[0]["dir"]:
-            nbr = self._get_neighbor(x, y, dir, glyph)
+        for dirtn in cont[0]["dir"]:
+            nbr = self._get_neighbor(x, y, dirtn, glyph)
             if not nbr:
                 continue
             nbr_reads = jmespath.search(f"[?symbol.contains(@,`{nbr}`)].readings[]", self.lexicon) 
@@ -90,17 +98,17 @@ class Interpreter:
             if not nbr_c_reads:
                 continue
 
-            if OPPOSITE_DIR[dir] in nbr_c_reads[0]["dir"]:
-                successful_matches.append(dir)
+            if OPPOSITE_DIR[dirtn] in nbr_c_reads[0]["dir"]:
+                successful_matches.append(dirtn)
 
         if len(successful_matches) != 1:
             return
-        
+
         start_w_dir = [r for r in readings if r["pos"] == "start" and r["dir"] == successful_matches[0]]
 
         if len(start_w_dir) != 1:
-            raise Exception(f"Internal Error: {len(start_w_dir)} dirs in a start where 1 was expected")
-        
+            raise InternalError(f"{len(start_w_dir)} dirs in a start where 1 was expected")
+
         return {
             "symbol": symbol[0]["symbol"],
             "name": symbol[0]["name"],
@@ -114,9 +122,9 @@ class Interpreter:
 
     def _find_strand_starts(self, glyph):
         starts = []
-        for y in range(0, len(glyph)):
-            for x in range(0, len(glyph[y])):
-                token = self._check_is_start(x, y, glyph)
+        for y in enumerate(glyph):
+            for x in enumerate(glyph[y[0]]):
+                token = self._check_is_start(x[0], y[0], glyph)
                 if token:
                     starts.append(token)
         return starts
@@ -133,8 +141,6 @@ class Interpreter:
         # We already know the direction prev is pointing, so we can look for the next character in that direction and mark as curr.
         curr = self._get_neighbor(prev["x"], prev["y"], prev["dir"], glyph, include_coords=True)
 
-        #TODO: look at start["type"] to determine if data (value or ref), action, or question. currently assumes data
-
         # next_dir is the direction curr continues onto its following character
         next_dir = False
 
@@ -143,10 +149,10 @@ class Interpreter:
 
         if not symbol or len(symbol) == 0:
             if (curr['symbol'] == ' '):
-                raise Exception(f"Internal Error: Blank space found at {curr['x']},{curr['y']}")
-            raise Exception(f"Internal Error: No symbol found for {curr['symbol']}")
+                raise InternalError(f"Blank space found at {curr['x']},{curr['y']}")
+            raise InternalError(f"No symbol found for {curr['symbol']}")
         if len(symbol) > 1:
-            raise Exception(f"Internal Error: More than one symbol found for {curr['symbol']}")
+            raise InternalError(f"More than one symbol found for {curr['symbol']}")
 
         # possible interpretations of the character
         readings = {}
@@ -159,7 +165,7 @@ class Interpreter:
                 # remove entries from r['dir'] matching opposite of start['dir']
                 next_dir = set(r['dir']) - set([OPPOSITE_DIR[prev['dir']]])
                 if len(next_dir) != 1:
-                    raise Exception("Internal Error: More than one direction in next step")
+                    raise InternalError("More than one direction in next step")
                 next_dir = next_dir.pop()
 
         # if it is moving left/right with a continue, add to value
@@ -167,12 +173,19 @@ class Interpreter:
 
             if not "value" in start:
                 start["value"] = 0
+            if not "vert_value" in start:
+                start["vert_value"] = 0
 
             # if it's straight and left or right, we add or subtract the prime
             if next_dir == 'right':
                 start['value'] += self.primes[curr["y"]]
             elif next_dir == 'left':
                 start['value'] -= self.primes[curr["y"]]
+            
+            if next_dir == 'down':
+                start['vert_value'] += abs(self.primes[start["x"] - curr["x"]])
+            elif next_dir == 'up':
+                start['vert_value'] -= abs(self.primes[start["x"] - curr["x"]])
 
         # test for end
         if "end" in readings or "loc_marker" in readings:
@@ -190,25 +203,36 @@ class Interpreter:
                 # check if the loc_marker reading has the right direction
                 if "loc_marker" in readings and OPPOSITE_DIR[prev['dir']] in readings["loc_marker"]['dir']:
                     start['value'] = None
-                    start['type'] = "ref"
                     start['end_x'] = curr['x']
                     start['end_y'] = curr['y']
+                    if start['type'] == "data":
+                        start['subtype'] = "ref"
+                    if start['type'] == "action":
+                        start["subtype"] = "list2list"
+                        start["command"] = self.command_map[str(start["vert_value"])]
                 else:
-                    # mark the ref strand
-                    start['type'] = "value"
-
+                    if start['type'] == "data":
+                        start['subtype'] = "value"
+                        start["vert_value"] = None
+                    if start['type'] == "action":
+                        start["value"] = None
+                        start["command"] = self.command_map[str(start["vert_value"])]
+                        if next_dir == "right" or next_dir == "left":
+                            start['subtype'] = "list"
+                        else:
+                            start['subtype'] = "element"
                 return
-            
+        
         # if it continues, load the next character
         if ("continue" in readings or "corner" in readings) and next_dir:
             curr["dir"] = next_dir
             self._interpret_strand(glyph, curr, start)
             return
-        
-        raise Exception(f"Internal Error: No valid reading found for char at {curr['x']},{curr['y']}")
+    
+        raise InternalError(f"No valid reading found for char at {curr['x']},{curr['y']}")
 
 
-    def lex_glyph(self, glyph, level):
+    def lex_glyph(self, glyph):
         starts = self._find_strand_starts(glyph)
         for s in starts:
             self._interpret_strand(glyph, s, s)
@@ -227,7 +251,7 @@ class Interpreter:
         starts = []
         ends = []
         level = 1
-        
+    
         for y, ln in enumerate(program):
             for x in _chars_in_list(self.get_symbol_by_name("start_glyph"), ln):
                 # make sure immediate right does not also have start symbol
@@ -240,7 +264,7 @@ class Interpreter:
                                 level += 1
             for x in _chars_in_list(self.get_symbol_by_name("end_glyph"), ln):
                 ends.append({"y":y, "x":x})
-        
+    
         for s in starts:
             for e in ends:
 
@@ -259,10 +283,11 @@ class Interpreter:
                         glyph_locs.append({"start":s,"end":e,"level":level})
 
         return glyph_locs
-    
+
     def _load_primes(self, glyphs):
+        "Load a list of primes up to the length of the longest dimension of any glyph"
         self.primes = [1]
-        primes_to_count = max([len(i["glyph"]) for i in glyphs])
+        primes_to_count = max(len(glyphs[0]), *[len(i['glyph']) for i in glyphs])
         for num in range(2, primes_to_count ** 2):
             if all(num%i!=0 for i in range(2,int(math.sqrt(num))+1)):
                 self.primes.append(num)
@@ -276,13 +301,14 @@ class Interpreter:
         if program[-1] == [] or set(program[-1]) == {' '}:
             program = program[:-1]
         return program
-    
+
     def _prepare_glyphs_for_lexing(self, glyph_locs, program):
-        "Returns a set of individual glyphs, each with its level, with the Start and End symbols removed"
+        "Returns a set of individual glyphs, each with its level, with the Starts and Ends removed"
         block_tree = []
         for g in glyph_locs:
             # isolate the glyph
-            glyph = [row[g["start"]["x"] - g["level"] + 1:g["end"]["x"]+1] for row in program[g["start"]["y"]:g["end"]["y"]+1]]
+            glyph = [row[g["start"]["x"] - g["level"] + 1:g["end"]["x"]+1] \
+                     for row in program[g["start"]["y"]:g["end"]["y"]+1]]
 
             # remove the start and end symbols
             for i in range(0, g["level"]):
@@ -293,8 +319,10 @@ class Interpreter:
 
         return block_tree
 
-    
-    def interpret_program(self, program):
+
+    def parse_program(self, program):
+        "Parse a Rivulet program into a tree of commands"
+
         # turn into a grid
         program = [list(ln) for ln in program.splitlines()]
 
@@ -302,16 +330,16 @@ class Interpreter:
         glyph_locs = self._locate_glyphs(program)
         glyphs = self._prepare_glyphs_for_lexing(glyph_locs, program)
 
-        # now that we know the # of lines of the longest glyph, we calculate the primes for the whole list
+        # now that we know the # of lines of the longest glyph, we calculate
+        # the primes for the whole list
         self._load_primes(glyphs)
-        
+
         for block in glyphs:
             block["tokens"] = self.lex_glyph(block["glyph"])
 
         # debug
         for glyph in glyphs:
             print(f"tokens: {glyph["tokens"]}")
-
 
 
     def interpret_file(self, progfile, outfile, verbose):
@@ -321,12 +349,14 @@ class Interpreter:
         with open(progfile, "r", encoding="utf-8") as file:
             program = file.read()
 
-        self.interpret_program(program)
+        self.parse_program(program)
+
+        return ""
 
 
 if __name__ == "__main__":
 
-    parser = ArgumentParser(description='Rivulet Interpreter 0.1', 
+    parser = ArgumentParser(description=f'Rivulet Interpreter {VERSION}', 
                             epilog='More at https://danieltemkin.com/Esolangs/Rivulet')
 
     parser.add_argument('progfile', metavar='progfile', type=str, 

@@ -1,3 +1,4 @@
+# pylint: skip-file
 lists = [] 
 
 def glyph1():

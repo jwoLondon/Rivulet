@@ -1,3 +1,7 @@
+# pylint: skip-file
+"""
+Test glyph locating and separation
+"""
 import copy
 import pytest
 from interpreter import Interpreter
@@ -24,7 +28,7 @@ zeroes2_glyph = """
 """
 zeroes2_glyph = [list(ln) for ln in zeroes2_glyph.splitlines()] # format
 
-def test_shave_zeroes_1():
+def test_shave_zeroes_1st_level():
     intr = Interpreter()
     gl = copy.deepcopy(zeroes_glyph)
     gl = intr._remove_blank_lines(gl)
@@ -34,7 +38,7 @@ def test_shave_zeroes_1():
     assert(block_tree[0]["glyph"][-1][-1] == ' ')
     assert(block_tree[0]["level"] == 1)
 
-def test_shave_zeroes_2():
+def test_shave_zeroes_2nd_level():
     intr = Interpreter()
     gl = copy.deepcopy(zeroes2_glyph)
     gl = intr._remove_blank_lines(gl)
@@ -114,15 +118,6 @@ def test_locate_glyphs_zeroes():
     assert(glyph_locs[0]['start'] == {"y": 0, "x": 0})
     assert(glyph_locs[0]['end'] == {"y": 6, "x": 18})
 
-def test_locate_glyphs_zeroes():
-    intr = Interpreter()
-    gl = copy.deepcopy(zeroes_glyph)
-    gl = intr._remove_blank_lines(gl)
-    glyph_locs = intr._locate_glyphs(gl)
-    assert(len(glyph_locs) == 1)
-    assert(glyph_locs[0]['start'] == {"y": 0, "x": 0})
-    assert(glyph_locs[0]['end'] == {"y": 6, "x": 18})    
-
 def test_locate_glyphs_with_partial_start():
     intr = Interpreter()
     gl = copy.deepcopy(glyph_with_partial_start)
@@ -183,7 +178,7 @@ def test_locate_three_glyphs():
     assert(glyph_locs[2]['start'] == {'y': 8, 'x': 1})
     assert(glyph_locs[2]['end'] == {'y': 12, 'x': 10})
 
-at_end = """
+has_ref_at_end = """
 ╵╭─╶ ╮  ╭─┘╭─╶         
  │   │╭─┘╭─╯           
  │╶╮ │╰─ │             
@@ -193,11 +188,11 @@ at_end = """
    ╰─┘       ╷
 
 """
-at_end = [list(ln) for ln in at_end.splitlines()] # format
+has_ref_at_end = [list(ln) for ln in has_ref_at_end.splitlines()] # format
 
-def test_at_end():
+def test_has_ref_at_end():
     intr = Interpreter()
-    pr = copy.deepcopy(at_end)
+    pr = copy.deepcopy(has_ref_at_end)
     pr = intr._remove_blank_lines(pr)
     glyph_locs = intr._locate_glyphs(pr)
     assert(len(glyph_locs) == 1)
@@ -225,7 +220,7 @@ def test_determine_level_2():
 
 def test_determine_level_1():
     intr = Interpreter()
-    gl = copy.deepcopy(at_end)
+    gl = copy.deepcopy(has_ref_at_end)
     gl = intr._remove_blank_lines(gl)
     glyph_locs = intr._locate_glyphs(gl)    
     assert(len(glyph_locs) == 1)
