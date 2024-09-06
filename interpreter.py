@@ -85,7 +85,8 @@ class Interpreter:
         cont = [r for r in readings if r["pos"] == "corner" or r["pos"] == "continue"]
 
         if not cont:
-            raise InternalError(f"No corner or continue in start for {symbol[0]}")
+            # No corner or continue -- it could be a ref indicator
+            return
 
         for dirtn in cont[0]["dir"]:
             nbr = self._get_neighbor(x, y, dirtn, glyph)
@@ -182,6 +183,7 @@ class Interpreter:
             elif next_dir == 'left':
                 start['value'] -= self.primes[curr["y"]]
             
+            # if it's up or down, we add or subtract the prime relative to the start of this strand
             if next_dir == 'down':
                 start['vert_value'] += abs(self.primes[start["x"] - curr["x"]])
             elif next_dir == 'up':
@@ -198,7 +200,11 @@ class Interpreter:
             # NOTE: We can't end on a corner or it would be a "hook" to start a strand (no strand can have a hook on both sides)
             if next_dir:
                 opposite_dir_readings = len(jmespath.search(f"[].readings[].dir[?contains(@,'{OPPOSITE_DIR[next_dir]}')][]", following))
-            if not next_dir or not following or not ("continue" in readings and opposite_dir_readings > 0, following):
+                if opposite_dir_readings == 0:
+                    opposite_dir_readings = len(jmespath.search(f"[].readings[?dir == '{OPPOSITE_DIR[next_dir]}'][]", following))
+                # ABOVE: needs to check for both scenarios, as dir is not always a list
+                #FIXME: probably should convert all dirs to lists at the beginning of this method
+            if not next_dir or not following or not ("continue" in readings and opposite_dir_readings > 0):
                 # if it's a value strand, we need to mark it as such
                 # check if the loc_marker reading has the right direction
                 if "loc_marker" in readings and OPPOSITE_DIR[prev['dir']] in readings["loc_marker"]['dir']:

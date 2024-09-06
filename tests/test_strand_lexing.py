@@ -51,6 +51,29 @@ def test_lex_zeroes():
       assert s["subtype"] == "value"
       assert s["value"] == 0
 
+glyph_with_ref_strand_vert = """
+╰──╮
+   │
+   ╷
+"""
+glyph_with_ref_strand_vert = [list(ln) for ln in glyph_with_ref_strand_vert.splitlines()] # format
+glyph_with_ref_strand_vert = glyph_with_ref_strand_vert[1:] # remove first line
+
+def test_glyph_with_ref_strand_vert():
+    "Test a glyph with an action element strand"
+    intr = Interpreter()
+    gl = [{"glyph": copy.deepcopy(glyph_with_ref_strand_vert)}]
+    intr._load_primes(gl)
+    starts = intr.lex_glyph(gl[0]["glyph"])
+    assert len(starts) == 1
+    assert starts[0]["type"] == "data"
+    assert starts[0]["subtype"] == "ref"
+    assert starts[0]["x"] == 0
+    assert starts[0]["y"] == 0
+    assert starts[0]["end_x"] == 3
+    assert starts[0]["end_y"] == 2
+
+
 glyph_with_action_strand = """
 ╰──╮╰─╮╰─╮
    │ ─┘  │
@@ -73,7 +96,7 @@ def test_identify_action_element_strand():
     assert starts[3]["subtype"] == "element"
     assert starts[3]["command"]["name"] == "multiplication_assignment"
 
-glyph_with_action_strand = """
+glyph_with_action_list_strand = """
 ╰──╮╰─╮╰─╮
    │ ─┘  │
      ────┘
@@ -82,13 +105,13 @@ glyph_with_action_strand = """
       │
       ╰─
 """
-glyph_with_action_strand = [list(ln) for ln in glyph_with_action_strand.splitlines()] # format
-glyph_with_action_strand = glyph_with_action_strand[1:] # remove first line
+glyph_with_action_list_strand = [list(ln) for ln in glyph_with_action_list_strand.splitlines()] # format
+glyph_with_action_list_strand = glyph_with_action_list_strand[1:] # remove first line
 
 def test_identify_action_list_strand():
     "Test a glyph with an action list strand"
     intr = Interpreter()
-    gl = [{"glyph": copy.deepcopy(glyph_with_action_strand)}]
+    gl = [{"glyph": copy.deepcopy(glyph_with_action_list_strand)}]
     intr._load_primes(gl)
     starts = intr.lex_glyph(gl[0]["glyph"])
     assert len(starts) == 4
@@ -111,7 +134,7 @@ glyph_with_action_horz_l2l_strand = glyph_with_action_horz_l2l_strand[1:] # remo
 def test_identify_action_horz_l2l_strand():
     "Test a glyph with an action list strand"
     intr = Interpreter()
-    gl = [{"glyph": copy.deepcopy(glyph_with_action_strand)}]
+    gl = [{"glyph": copy.deepcopy(glyph_with_action_horz_l2l_strand)}]
     intr._load_primes(gl)
     starts = intr.lex_glyph(gl[0]["glyph"])
     assert len(starts) == 4

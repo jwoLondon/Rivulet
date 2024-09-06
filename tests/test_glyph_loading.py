@@ -17,6 +17,16 @@ zeroes_glyph = """
 """
 zeroes_glyph = [list(ln) for ln in zeroes_glyph.splitlines()] # format
 
+def test_shave_zeroes_1st_level():
+    intr = Interpreter()
+    gl = copy.deepcopy(zeroes_glyph)
+    gl = intr._remove_blank_lines(gl)
+    glyph_locs = intr._locate_glyphs(gl)
+    block_tree = intr._prepare_glyphs_for_lexing(glyph_locs, gl)
+    assert(block_tree[0]["glyph"][0][0] == ' ')
+    assert(block_tree[0]["glyph"][-1][-1] == ' ')
+    assert(block_tree[0]["level"] == 1)
+    
 zeroes2_glyph = """
 ╵╵ ╰──╮ ╭───╯╭──╯
  ╰─╮ ─┘ │╰─╮ └─ ╭─╮
@@ -27,16 +37,6 @@ zeroes2_glyph = """
                  ─╯╷
 """
 zeroes2_glyph = [list(ln) for ln in zeroes2_glyph.splitlines()] # format
-
-def test_shave_zeroes_1st_level():
-    intr = Interpreter()
-    gl = copy.deepcopy(zeroes_glyph)
-    gl = intr._remove_blank_lines(gl)
-    glyph_locs = intr._locate_glyphs(gl)
-    block_tree = intr._prepare_glyphs_for_lexing(glyph_locs, gl)
-    assert(block_tree[0]["glyph"][0][0] == ' ')
-    assert(block_tree[0]["glyph"][-1][-1] == ' ')
-    assert(block_tree[0]["level"] == 1)
 
 def test_shave_zeroes_2nd_level():
     intr = Interpreter()

@@ -10,7 +10,7 @@
             },
             {
                 "pos": "loc_marker",
-                "dir": "up",
+                "dir": "down",
                 "type": "loc_marker"
             }
         ]
@@ -26,7 +26,7 @@
             },
             {
                 "pos": "loc_marker",
-                "dir": "down",
+                "dir": "up",
                 "type": "loc_marker"
             }
         ]
