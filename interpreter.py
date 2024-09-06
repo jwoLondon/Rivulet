@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 import json
 import math
 import jmespath
-from riv_exceptions import InternalError #, RivuletSyntaxError
+from riv_exceptions import InternalError, RivuletSyntaxError
 
 
 VERSION = "0.1"
@@ -235,7 +235,7 @@ class Interpreter:
             self._interpret_strand(glyph, curr, start)
             return
     
-        raise InternalError(f"No valid reading found for char at {curr['x']},{curr['y']}")
+        raise RivuletSyntaxError(f"No valid reading found for char {curr['x']}, {curr['y']}")
 
 
     def lex_glyph(self, glyph):
@@ -334,6 +334,10 @@ class Interpreter:
 
         program = self._remove_blank_lines(program)
         glyph_locs = self._locate_glyphs(program)
+
+        if not glyph_locs:
+            raise RivuletSyntaxError("No start found in glyph")
+
         glyphs = self._prepare_glyphs_for_lexing(glyph_locs, program)
 
         # now that we know the # of lines of the longest glyph, we calculate
