@@ -4,7 +4,7 @@ Test strand analysis in lexer
 """
 import copy
 import pytest
-from interpreter import Interpreter
+from lexer import Lexer
 
 zeroes_st_glyph = """
   ╰──╮ ╭───╯╭──╯
@@ -20,7 +20,7 @@ zeroes_st_glyph = zeroes_st_glyph[1:] # remove first line
 
 def test_find_starts_data_strands():
     "Find the start of every strand"
-    intr = Interpreter()
+    intr = Lexer()
     gl = copy.deepcopy(zeroes_st_glyph)
     starts = intr._find_strand_starts(gl)
     assert len(starts) == 7
@@ -42,7 +42,7 @@ def test_find_starts_data_strands():
 
 def test_lex_zeroes():
     "Test each strand is a value strand with value 0"
-    intr = Interpreter()
+    intr = Lexer()
     gl = [{"glyph": copy.deepcopy(zeroes_st_glyph)}]
     intr._load_primes(gl)
     starts = intr.lex_glyph(gl[0]["glyph"])
@@ -61,7 +61,7 @@ glyph_with_ref_strand_vert = glyph_with_ref_strand_vert[1:] # remove first line
 
 def test_glyph_with_ref_strand_vert():
     "Test a glyph with an action element strand"
-    intr = Interpreter()
+    intr = Lexer()
     gl = [{"glyph": copy.deepcopy(glyph_with_ref_strand_vert)}]
     intr._load_primes(gl)
     starts = intr.lex_glyph(gl[0]["glyph"])
@@ -87,7 +87,7 @@ glyph_with_action_strand = glyph_with_action_strand[1:] # remove first line
 
 def test_identify_action_element_strand():
     "Test a glyph with an action element strand"
-    intr = Interpreter()
+    intr = Lexer()
     gl = [{"glyph": copy.deepcopy(glyph_with_action_strand)}]
     intr._load_primes(gl)
     starts = intr.lex_glyph(gl[0]["glyph"])
@@ -110,7 +110,7 @@ glyph_with_action_list_strand = glyph_with_action_list_strand[1:] # remove first
 
 def test_identify_action_list_strand():
     "Test a glyph with an action list strand"
-    intr = Interpreter()
+    intr = Lexer()
     gl = [{"glyph": copy.deepcopy(glyph_with_action_list_strand)}]
     intr._load_primes(gl)
     starts = intr.lex_glyph(gl[0]["glyph"])
@@ -133,7 +133,7 @@ glyph_with_action_horz_l2l_strand = glyph_with_action_horz_l2l_strand[1:] # remo
 
 def test_identify_action_horz_l2l_strand():
     "Test a glyph with an action list strand"
-    intr = Interpreter()
+    intr = Lexer()
     gl = [{"glyph": copy.deepcopy(glyph_with_action_horz_l2l_strand)}]
     intr._load_primes(gl)
     starts = intr.lex_glyph(gl[0]["glyph"])
@@ -158,7 +158,7 @@ glyph_with_question_strands = glyph_with_question_strands[1:] # remove first lin
 
 def test_correct_count_ends_with_left_facing():
     "Find the correct starts for a glyph with a question strand set where a questions strand ends facing left"
-    intr = Interpreter()
+    intr = Lexer()
     gl = [{"glyph": copy.deepcopy(glyph_with_question_strands)}]
     intr._load_primes(gl)
     starts = intr._find_strand_starts(gl[0]["glyph"])
@@ -166,7 +166,7 @@ def test_correct_count_ends_with_left_facing():
 
 def test_identify_question_strands():
     "Test a glyph with a question strand set"
-    intr = Interpreter()
+    intr = Lexer()
     gl = [{"glyph": copy.deepcopy(glyph_with_question_strands)}]
     intr._load_primes(gl)
     starts = intr.lex_glyph(gl[0]["glyph"])
