@@ -4,11 +4,6 @@
         "name":     "start_glyph",
         "readings": [
             {
-                "pos": "start",
-                "dir": "up",
-                "type": "type_three"
-            },
-            {
                 "pos": "loc_marker",
                 "dir": "down",
                 "type": "loc_marker"
@@ -22,7 +17,7 @@
             {
                 "pos": "start",
                 "dir": "down",
-                "type": "type_three"
+                "type": "question_marker"
             },
             {
                 "pos": "loc_marker",

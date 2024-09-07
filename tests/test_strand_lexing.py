@@ -18,7 +18,7 @@ zeroes_st_glyph = """
 zeroes_st_glyph = [list(ln) for ln in zeroes_st_glyph.splitlines()] # format
 zeroes_st_glyph = zeroes_st_glyph[1:] # remove first line
 
-def test_find_starts():
+def test_find_starts_data_strands():
     "Find the start of every strand"
     intr = Interpreter()
     gl = copy.deepcopy(zeroes_st_glyph)
@@ -141,3 +141,42 @@ def test_identify_action_horz_l2l_strand():
     assert starts[3]["type"] == "action"
     assert starts[3]["subtype"] == "list2list"
     assert starts[3]["command"]["name"] == "multiplication_assignment"
+
+# question strand set
+glyph_with_question_strands = """
+╰──╮╰─╮╰─╮╷
+   │ ─┘  ││
+╭───╮╶───┘│
+╰─╮ │ ╭───┘
+╭─╯ │ │╭──╮
+╰─╮ │ ╷│╭─╯
+╭─┘ ╰─┘│╰─╮
+╰──────╯ ─╯
+"""
+glyph_with_question_strands = [list(ln) for ln in glyph_with_question_strands.splitlines()] # format
+glyph_with_question_strands = glyph_with_question_strands[1:] # remove first line
+
+def test_correct_count_ends_with_left_facing():
+    "Find the correct starts for a glyph with a question strand set where a questions strand ends facing left"
+    intr = Interpreter()
+    gl = [{"glyph": copy.deepcopy(glyph_with_question_strands)}]
+    intr._load_primes(gl)
+    starts = intr._find_strand_starts(gl[0]["glyph"])
+    assert len(starts) == 5
+
+def test_identify_question_strands():
+    "Test a glyph with a question strand set"
+    intr = Interpreter()
+    gl = [{"glyph": copy.deepcopy(glyph_with_question_strands)}]
+    intr._load_primes(gl)
+    starts = intr.lex_glyph(gl[0]["glyph"])
+    assert starts[3]["type"] == "question_marker"
+    assert starts[3]['x'] == 10
+    assert starts[3]['y'] == 0
+    assert starts[3]['end_x'] == 6
+    assert starts[3]['end_y'] == 5
+    assert starts[4]["type"] == "question_marker"
+    assert starts[4]['x'] == 6
+    assert starts[4]['y'] == 5
+    assert starts[4]['end_x'] == 9
+    assert starts[4]['end_y'] == 7

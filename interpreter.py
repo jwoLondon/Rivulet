@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 # from functools import reduce
 import json
 import math
-import jmespath
 from riv_exceptions import InternalError, RivuletSyntaxError
 
 
@@ -30,12 +29,19 @@ class Interpreter:
         with open('_commands.json', encoding='utf-8') as cmds:
             self.command_map = json.load(cmds)
 
+        # convert all directions to lists (some are just strings)
+        for s in self.lexicon:
+            for r in s["readings"]:
+                if not isinstance(r["dir"], list):
+                    r["dir"] = [r["dir"]]
+
         self.primes = []
         self.outfile = ""
         self.verbose = ""
 
 
     def get_symbol_by_name(self, name:str):
+        "Returns symbol representation and readings for a given name"
         retlist = []
 
         for ltr in self.lexicon:
@@ -63,49 +69,57 @@ class Interpreter:
             if include_coords:
                 return {"symbol": glyph[y][x+1], "x": x+1, "y": y}
             return glyph[y][x+1]
+        return None
 
-    def _check_is_start(self, x, y, glyph):
 
-        symbol = jmespath.search(f"[?symbol.contains(@,`{glyph[y][x]}`)]", self.lexicon)
+    def _find_successful_matches(self, x, y, glyph, readings):
+        "Find directions where there is a continuing character on the other side of a sign"
 
-        # symbol has no reading, ignore
-        if not symbol or len(symbol) == 0:
-            return
-
-        readings = jmespath.search("[].readings[]", symbol)
-
-        # symbol has no starts, ignore
-        if not any(r["pos"] == "start" for r in readings):
-            return
-
-        # check that it has one but not both sides of a corner or a continue
         successful_matches = []
 
         # assuming only one reading of this kind
-        cont = [r for r in readings if r["pos"] == "corner" or r["pos"] == "continue"]
+        cont = [r for r in readings if r["pos"] == "corner" or r["pos"] == "continue" or r["type"] == "question_marker"]
 
         if not cont:
-            # No corner or continue -- it could be a ref indicator
-            return
+            return None
 
-        for dirtn in cont[0]["dir"]:
-            nbr = self._get_neighbor(x, y, dirtn, glyph)
-            if not nbr:
+        for direction in cont[0]["dir"]:
+            neighbor = self._get_neighbor(x, y, direction, glyph)
+            if not neighbor:
                 continue
-            nbr_reads = jmespath.search(f"[?symbol.contains(@,`{nbr}`)].readings[]", self.lexicon) 
+
+            # all neighbor's readings
+            nbr_reads = [l["readings"] for l in self.lexicon if neighbor in l["symbol"]]
             if not nbr_reads:
                 continue
-            nbr_c_reads = [n for n in nbr_reads if n["pos"] == "corner" or n["pos"] == "continue"] #FIXME: Can this be done through jmespath so we don't do this twice?
-            if not nbr_c_reads:
-                continue
 
-            if OPPOSITE_DIR[dirtn] in nbr_c_reads[0]["dir"]:
-                successful_matches.append(dirtn)
+            if any(n for n in nbr_reads[0] if OPPOSITE_DIR[direction] in n["dir"]):
+                successful_matches.append(direction)
+
+        return successful_matches
+
+
+    def _check_is_start(self, x, y, glyph):
+
+        symbol = [l for l in self.lexicon if glyph[y][x] in l["symbol"]]
+
+        # symbol has no reading, ignore
+        if not symbol or len(symbol) == 0:
+            return None
+
+        readings = [s["readings"] for s in symbol][0]
+
+        # symbol has no starts, ignore
+        if not any(r["pos"] == "start" for r in readings):
+            return None
+
+        successful_matches = self._find_successful_matches(x, y, glyph, readings)
 
         if len(successful_matches) != 1:
-            return
+            return None
 
-        start_w_dir = [r for r in readings if r["pos"] == "start" and r["dir"] == successful_matches[0]]
+        # has a connecting sign in the direction it points
+        start_w_dir = [r for r in readings if r["pos"] == "start" and r["dir"] == [successful_matches[0]]]
 
         if len(start_w_dir) != 1:
             raise InternalError(f"{len(start_w_dir)} dirs in a start where 1 was expected")
@@ -146,7 +160,7 @@ class Interpreter:
         next_dir = False
 
         # symbol is the metadata, pulled from the lexicon, for curr's character
-        symbol = jmespath.search(f"[?symbol.contains(@,`{curr['symbol']}`)]", self.lexicon)
+        symbol = [l for l in self.lexicon if curr['symbol'] in l['symbol']]
 
         if not symbol or len(symbol) == 0:
             if (curr['symbol'] == ' '):
@@ -157,7 +171,7 @@ class Interpreter:
 
         # possible interpretations of the character
         readings = {}
-        for r in jmespath.search("[].readings[]", symbol):
+        for r in [s['readings'] for s in symbol][0]:
             readings[r["pos"]] = r
 
         if "continue" in readings or "corner" in readings:
@@ -189,25 +203,36 @@ class Interpreter:
             elif next_dir == 'up':
                 start['vert_value'] -= abs(self.primes[start["x"] - curr["x"]])
 
-        # test for end
+        # TEST FOR END
+        # a loc_marker is also an end, but only if it's pointing in the opposite direction of the previous character
         if "end" in readings or "loc_marker" in readings:
             if next_dir:
-                # check if the strand ends here
-                following = self._get_neighbor(curr['x'], curr['y'], next_dir, glyph)
-                following = jmespath.search(f"[?symbol.contains(@,`{following}`)]", self.lexicon)
+                # does the strand end here
+                following = [i for i in self.lexicon if self._get_neighbor(curr['x'], curr['y'], next_dir, glyph) in i['symbol']]
+
+                # there should only be one
+                if following:
+                    following = following[0]
+                else:
+                    following = None
 
             # if it's possible this is also a continue, we need to check if the next step has a continuation or if this is really the end
             # NOTE: We can't end on a corner or it would be a "hook" to start a strand (no strand can have a hook on both sides)
-            if next_dir:
-                opposite_dir_readings = len(jmespath.search(f"[].readings[].dir[?contains(@,'{OPPOSITE_DIR[next_dir]}')][]", following))
-                if opposite_dir_readings == 0:
-                    opposite_dir_readings = len(jmespath.search(f"[].readings[?dir == '{OPPOSITE_DIR[next_dir]}'][]", following))
-                # ABOVE: needs to check for both scenarios, as dir is not always a list
-                #FIXME: probably should convert all dirs to lists at the beginning of this method
-            if not next_dir or not following or not ("continue" in readings and opposite_dir_readings > 0):
+            has_connecting_sign = (next_dir and following and OPPOSITE_DIR[next_dir] in [x for xs in [r["dir"] for r in following["readings"]]for x in xs])
+
+            if not next_dir \
+                or not following \
+                or not ("continue" in readings and has_connecting_sign):
+
+                if start["type"] == "question_marker":
+                    start['end_x'] = curr['x']
+                    start['end_y'] = curr['y']
+
                 # if it's a value strand, we need to mark it as such
                 # check if the loc_marker reading has the right direction
-                if "loc_marker" in readings and OPPOSITE_DIR[prev['dir']] in readings["loc_marker"]['dir']:
+                elif "loc_marker" in readings and \
+                    OPPOSITE_DIR[prev['dir']] in readings["loc_marker"]['dir']:
+
                     start['value'] = None
                     start['end_x'] = curr['x']
                     start['end_y'] = curr['y']
@@ -228,17 +253,19 @@ class Interpreter:
                         else:
                             start['subtype'] = "element"
                 return
-        
+
         # if it continues, load the next character
         if ("continue" in readings or "corner" in readings) and next_dir:
             curr["dir"] = next_dir
             self._interpret_strand(glyph, curr, start)
             return
-    
+
         raise RivuletSyntaxError(f"No valid reading found for char {curr['x']}, {curr['y']}")
 
 
     def lex_glyph(self, glyph):
+        "Returns collection of strands with their interpretations"
+        #FIXME: should ensure that starts and ends are cleared OR TAKE PARAM
         starts = self._find_strand_starts(glyph)
         for s in starts:
             self._interpret_strand(glyph, s, s)
@@ -327,7 +354,7 @@ class Interpreter:
 
 
     def parse_program(self, program):
-        "Parse a Rivulet program into a tree of commands"
+        "Parse a Rivulet program and return a tree of commands"
 
         # turn into a grid
         program = [list(ln) for ln in program.splitlines()]
@@ -336,7 +363,7 @@ class Interpreter:
         glyph_locs = self._locate_glyphs(program)
 
         if not glyph_locs:
-            raise RivuletSyntaxError("No start found in glyph")
+            raise RivuletSyntaxError("No glyph found")
 
         glyphs = self._prepare_glyphs_for_lexing(glyph_locs, program)
 

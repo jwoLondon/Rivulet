@@ -26,7 +26,7 @@ def test_shave_zeroes_1st_level():
     assert(block_tree[0]["glyph"][0][0] == ' ')
     assert(block_tree[0]["glyph"][-1][-1] == ' ')
     assert(block_tree[0]["level"] == 1)
-    
+
 zeroes2_glyph = """
 ╵╵ ╰──╮ ╭───╯╭──╯
  ╰─╮ ─┘ │╰─╮ └─ ╭─╮
@@ -197,7 +197,7 @@ def test_has_ref_at_end():
     glyph_locs = intr._locate_glyphs(pr)
     assert(len(glyph_locs) == 1)
 
-
+# Second level glyph
 fib_2_glyph = """
 ╵╵╭─╶ ╮  ╭─┘╭─╶ 
   │   │╭─┘╭─╯  
@@ -225,3 +225,24 @@ def test_determine_level_1():
     glyph_locs = intr._locate_glyphs(gl)    
     assert(len(glyph_locs) == 1)
     assert(glyph_locs[0]['level'] == 1)
+
+# White space on top
+whitespace_top_glyph = """
+
+
+
+ ╵╭─╶ ╮  ╭─┘╭─╶ 
+  │   │╭─┘╭─╯  
+  │╶╮ │╰─ │ 
+  ╰─┘ ╰───┘   ╷
+"""
+
+whitespace_top_glyph = [list(ln) for ln in whitespace_top_glyph.splitlines()] # format
+whitespace_top_glyph = whitespace_top_glyph[1:] # remove first line
+
+def test_glyph_program_whitespace_top():
+    intr = Interpreter()
+    gl = copy.deepcopy(whitespace_top_glyph)
+    gl = intr._remove_blank_lines(gl)
+    glyph_locs = intr._locate_glyphs(gl)    
+    assert(len(glyph_locs) == 1)

@@ -20,7 +20,7 @@ def test_missing_glyph_markers():
     with pytest.raises(RivuletSyntaxError) as err:
         intr.parse_program(gl)       
 
-    assert "No start" in str(err.value)
+    assert "No glyph" in str(err.value)
 
 hooks_both_ends_glyph = """
 ╵╰─╮
@@ -52,4 +52,4 @@ def test_bad_start():
     with pytest.raises(RivuletSyntaxError) as err:
         intr.parse_program(gl)
 
-    assert "No start found" in str(err.value)
+    assert "No glyph" in str(err.value)
