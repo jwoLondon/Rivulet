@@ -118,11 +118,11 @@ class Interpreter:
         if len(successful_matches) != 1:
             return None
 
-        # has a connecting sign in the direction it points
-        start_w_dir = [r for r in readings if r["pos"] == "start" and r["dir"] == [successful_matches[0]]]
+        # the reading compatible with the direction of the strand
+        reading_for_dir = [r for r in readings if r["pos"] == "start" and r["dir"] == [successful_matches[0]]]
 
-        if len(start_w_dir) != 1:
-            raise InternalError(f"{len(start_w_dir)} dirs in a start where 1 was expected")
+        if len(reading_for_dir) != 1:
+            raise InternalError(f"{len(reading_for_dir)} dirs in a start where 1 was expected")
 
         return {
             "symbol": symbol[0]["symbol"],
@@ -131,7 +131,7 @@ class Interpreter:
             "y": y,
             "dir": successful_matches[0],
             "pos": "start",
-            "type": start_w_dir[0]["type"]
+            "type": reading_for_dir[0]["type"]
         }
 
 
