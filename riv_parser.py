@@ -208,9 +208,9 @@ class Parser:
 
             # if it's up or down, we add or subtract the prime relative to the start of this strand
             if next_dir == 'down':
-                start['vert_value'] += abs(self.primes[start["x"] - curr["x"]])
+                start['vert_value'] -= abs(self.primes[math.floor((start["x"] - curr["x"])/2)])
             elif next_dir == 'up':
-                start['vert_value'] -= abs(self.primes[start["x"] - curr["x"]])
+                start['vert_value'] += abs(self.primes[math.floor((start["x"] - curr["x"])/2)])
 
         # TEST FOR END
         # a loc_marker is also an end, but only if it's pointing in the opposite direction of the previous character
@@ -408,9 +408,9 @@ class Parser:
                 token["list"] = self.primes[token["y"]]
                 token["order"] = order
                 order += 1
-                if token["subtype"] != "list2list":
-                    token["assign_to_cell"] = count_per_list[token["y"]]
-                    count_per_list[token["y"]] += 1
+
+                token["assign_to_cell"] = count_per_list[token["y"]]
+                count_per_list[token["y"]] += 1
                 sorted_tokens.append(token)
 
             # Question Markers are to be run last
@@ -440,9 +440,9 @@ class Parser:
                     token["ref_cell"] = [self.primes[token["end_y"]], 0]
                 else:
                     token["ref_cell"] = [self.primes[token["end_y"]], min(t["assign_to_cell"] for t in ref) + 1]
-
+            
             # Action strands are added to their respective data strands
-
+            # The top action strand for an x value goes to the top data strand for that x value
             curr_x = 0
             x_count = 0
             for actiontoken in \
@@ -456,11 +456,20 @@ class Parser:
                     curr_x = int(actiontoken["x"])
                 for idx, datanode in enumerate([t for t in sorted_tokens \
                     if t["type"] == "data" and t["x"] == actiontoken["x"]]):
-                    if(x_count == idx):
+                    if x_count == idx:
                         datanode["action"] = actiontoken
-                
+
+                        # apply appropriate commnd for data token type
+                        if (datanode["subtype"] == "list" or actiontoken["subtype"] == "list" or actiontoken["subtype"] == "list2list") and "list_name" in datanode["action"]["command"]:
+                            datanode["action"]["command_note"] = actiontoken["command"]["list_note"]
+                            datanode["action"]["command"] = actiontoken["command"]["list_name"]
+                        else:
+                            datanode["action"]["command_note"] = actiontoken["command"]["note"]
+                            datanode["action"]["command"] = actiontoken["command"]["name"]
+
             glyph['tokens'] = sorted_tokens
             print(glyph["tokens"])
+
 
 
     def parse_program(self, program):

@@ -94,7 +94,7 @@ def test_identify_action_element_strand():
     assert len(starts) == 4
     assert starts[3]["type"] == "action"
     assert starts[3]["subtype"] == "element"
-    assert starts[3]["command"]["name"] == "multiplication_assignment"
+    assert starts[3]["command"]["name"] == "division_assignment"
 
 glyph_with_action_list_strand = """
 ╰──╮╰─╮╰─╮
@@ -117,7 +117,7 @@ def test_identify_action_list_strand():
     assert len(starts) == 4
     assert starts[3]["type"] == "action"
     assert starts[3]["subtype"] == "list"
-    assert starts[3]["command"]["name"] == "multiplication_assignment"
+    assert starts[3]["command"]["name"] == "division_assignment"
 
 glyph_with_action_horz_l2l_strand = """
 ╰──╮╰─╮╰─╮
@@ -140,7 +140,7 @@ def test_identify_action_horz_l2l_strand():
     assert len(starts) == 4
     assert starts[3]["type"] == "action"
     assert starts[3]["subtype"] == "list2list"
-    assert starts[3]["command"]["name"] == "multiplication_assignment"
+    assert starts[3]["command"]["name"] == "division_assignment"
 
 # question strand set
 glyph_with_question_strands = """

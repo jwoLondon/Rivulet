@@ -225,6 +225,8 @@ def test_correct_ref_cells():
 
     assert len(block["tokens"]) == 4
     assert block["tokens"][0]["ref_cell"] == [2, 0]
+    assert block["tokens"][1]["ref_cell"] == [2, 1]
+    assert block["tokens"][2]["ref_cell"] == [3, 0]
 
 def test_action_strands_connect_to_correct_data_strands():
     parser = Parser()
@@ -239,3 +241,55 @@ def test_action_strands_connect_to_correct_data_strands():
 
     assert block["tokens"][2]["action"]['x'] == 9
     assert block["tokens"][2]["action"]['y'] == 4
+
+action_strand_add_replace = """
+ 1 ╵╵     ╭───╮ ╭─
+ 2    ╴─╮╶╯╶╮ ╷╶╯
+ 3  ╵╰──┘   │
+ 5  ╰───────╯
+ 7   ╭╴     ╭╴
+11   │      │
+13 │ │    │ │
+17 ╰─╯    ╰─╯    ╷
+"""
+def test_action_strand_overwrite():
+    parser = Parser()
+    block = parser.parse_program(str(action_strand_add_replace))[0]
+
+    assert block["tokens"][0]["action"]["command"] == "overwrite"
+    assert block["tokens"][2]["action"]["command"] == "overwrite"
+
+action_strand_with_list_interpretation = """
+ 1 ╵╵     ╭───╮
+ 2    ╴─╮╶╯╶╮ ╷
+ 3  ╵╰──┘   │
+ 5  ╰───────╯
+ 7   ╭╴ ──╮ ╭╴
+11 │ │    │ │
+13 ╰─╯    ╰─╯ ╷
+"""
+def test_action_strand_with_list_interpretation():
+    parser = Parser()
+    block = parser.parse_program(str(action_strand_with_list_interpretation))[0]
+
+    assert block["tokens"][0]["action"]["command"] == "insert"
+    assert block["tokens"][2]["action"]["command"] == "append"
+    assert block["tokens"][2]["action"]["subtype"] == "list"
+
+
+action_strand_with_list2list_interpretation = """
+ 1 ╵╵     ╭───╮
+ 2    ╴─╮╶╯╶╮ ╷
+ 3  ╵╰──┘   │
+ 5  ╰───────╯
+ 7   ╭╴ ╴─╮ ╭╴
+11 │ │    │ │
+13 ╰─╯    ╰─╯ ╷
+"""
+def test_action_strand_with_list2list_interpretation():
+    parser = Parser()
+    block = parser.parse_program(str(action_strand_with_list2list_interpretation))[0]
+
+    assert block["tokens"][0]["action"]["command"] == "insert"
+    assert block["tokens"][2]["action"]["command"] == "append"
+    assert block["tokens"][2]["action"]["subtype"] == "list2list"
