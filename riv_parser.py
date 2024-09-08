@@ -208,9 +208,9 @@ class Parser:
 
             # if it's up or down, we add or subtract the prime relative to the start of this strand
             if next_dir == 'down':
-                start['vert_value'] -= abs(self.primes[math.floor((start["x"] - curr["x"])/2)])
+                start['vert_value'] += self.primes[abs(math.floor((start["x"] - curr["x"])/2))]
             elif next_dir == 'up':
-                start['vert_value'] += abs(self.primes[math.floor((start["x"] - curr["x"])/2)])
+                start['vert_value'] -= self.primes[abs(math.floor((start["x"] - curr["x"])/2))]
 
         # TEST FOR END
         # a loc_marker is also an end, but only if it's pointing in the opposite direction of the previous character
