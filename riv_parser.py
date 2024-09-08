@@ -1,7 +1,7 @@
 import json
 import math
 from riv_exceptions import InternalError, RivuletSyntaxError
-
+# pylint: disable=locally-disabled, fixme, line-too-long
 
 VERSION = "0.1"
 
@@ -18,8 +18,8 @@ OPPOSITE_DIR = {
     "left": "right"
 }
 
-class Lexer:
-    "Lexer for the Rivulet esolang"
+class Parser:
+    "Parser for the Rivulet esolang"
 
     def __init__(self):
         with open('_lexicon.json', encoding='utf-8') as lex:
@@ -74,15 +74,15 @@ class Lexer:
         successful_matches = []
 
         # assuming only one reading of this kind
-        cont = [r for r in readings \
+        reading = [r for r in readings \
                 if r["pos"] == "corner" \
                 or r["pos"] == "continue" \
                 or r["type"] == "question_marker"]
 
-        if not cont:
+        if not reading:
             return None
 
-        for direction in cont[0]["dir"]:
+        for direction in reading[0]["dir"]:
             neighbor = self._get_neighbor(x, y, direction, glyph)
             if not neighbor:
                 continue
@@ -118,12 +118,12 @@ class Lexer:
             return None
 
         # the reading compatible with the direction of the strand
-        reading_for_dir = [r for r in readings \
+        reading_for_match = [r for r in readings \
             if r["pos"] == "start" \
             and r["dir"] == [successful_matches[0]]]
 
-        if len(reading_for_dir) != 1:
-            raise InternalError(f"{len(reading_for_dir)} dirs in a start where 1 was expected")
+        if len(reading_for_match) != 1:
+            raise InternalError(f"{len(reading_for_match)} dirs in a start where 1 was expected")
 
         return {
             "symbol": symbol[0]["symbol"],
@@ -132,7 +132,7 @@ class Lexer:
             "y": y,
             "dir": successful_matches[0],
             "pos": "start",
-            "type": reading_for_dir[0]["type"]
+            "type": reading_for_match[0]["type"]
         }
 
 
@@ -164,7 +164,7 @@ class Lexer:
         symbol = [l for l in self.lexicon if curr['symbol'] in l['symbol']]
 
         if not symbol or len(symbol) == 0:
-            if (curr['symbol'] == ' '):
+            if curr['symbol'] == ' ':
                 raise InternalError(f"Blank space found at {curr['x']},{curr['y']}")
             raise InternalError(f"No symbol found for {curr['symbol']}")
         if len(symbol) > 1:
@@ -197,7 +197,7 @@ class Lexer:
                 start['value'] += self.primes[curr["y"]]
             elif next_dir == 'left':
                 start['value'] -= self.primes[curr["y"]]
-            
+
             # if it's up or down, we add or subtract the prime relative to the start of this strand
             if next_dir == 'down':
                 start['vert_value'] += abs(self.primes[start["x"] - curr["x"]])
@@ -225,38 +225,8 @@ class Lexer:
                 or not following \
                 or not ("continue" in readings and has_connecting_sign):
 
-                # We are at the end of the strand
-                # Here we determine what kind of strand we have and null out anything irrelevant to its reading
-
-                if start["type"] == "question_marker":
-                    start['end_x'] = curr['x']
-                    start['end_y'] = curr['y']
-
-                # if it's a value strand, we need to mark it as such
-                # check if the loc_marker reading has the right direction
-                elif "loc_marker" in readings and \
-                    OPPOSITE_DIR[prev['dir']] in readings["loc_marker"]['dir']:
-
-                    start['value'] = None
-                    start['end_x'] = curr['x']
-                    start['end_y'] = curr['y']
-                    if start['type'] == "data":
-                        start["vert_value"] = None
-                        start['subtype'] = "ref"
-                    if start['type'] == "action":
-                        start["subtype"] = "list2list"
-                        start["command"] = self.command_map[str(start["vert_value"])]
-                else:
-                    if start['type'] == "data":
-                        start['subtype'] = "value"
-                        start["vert_value"] = None
-                    if start['type'] == "action":
-                        start["value"] = None
-                        start["command"] = self.command_map[str(start["vert_value"])]
-                        if next_dir == "right" or next_dir == "left":
-                            start['subtype'] = "list"
-                        else:
-                            start['subtype'] = "element"
+                # WE ARE AT THE END of the strand
+                self._mark_end(start, curr, next_dir, prev, readings)
                 return
 
         # if it continues, load the next character
@@ -268,9 +238,49 @@ class Lexer:
         raise RivuletSyntaxError(f"No valid reading found for char {curr['x']}, {curr['y']}")
 
 
-    def lex_glyph(self, glyph):
+    def _mark_end(self, start, curr, next_dir, prev, readings):
+        "Determine what kind of strand we have and null out anything irrelevant to its reading"
+
+        if start["type"] == "question_marker":
+            start['end_x'] = curr['x']
+            start['end_y'] = curr['y']
+            start['value'] = None
+            start['vert_value'] = None
+
+        # if it's a value strand, we need to mark it as such
+        # check if the loc_marker reading has the right direction
+        elif "loc_marker" in readings and \
+            OPPOSITE_DIR[prev['dir']] in readings["loc_marker"]['dir']:
+
+            start['value'] = None
+            start['end_x'] = curr['x']
+            start['end_y'] = curr['y']
+            if start['type'] == "data":
+                start["vert_value"] = None
+                start['subtype'] = "ref"
+            if start['type'] == "action":
+                start["subtype"] = "list2list"
+                start["command"] = self.command_map[str(start["vert_value"])]
+        else:
+            if start['type'] == "data":
+                start['subtype'] = "value"
+                start["vert_value"] = None
+            if start['type'] == "action":
+                start["value"] = None
+                start["command"] = self.command_map[str(start["vert_value"])]
+                if next_dir == "right" or next_dir == "left":
+                    start['subtype'] = "list"
+                else:
+                    start['subtype'] = "element"
+
+
+    def _lex_glyph(self, glyph):
         "Returns collection of strands with their interpretations"
         #FIXME: should ensure that starts and ends are cleared OR TAKE PARAM
+
+        # make glyph rectangular
+        glyph = [ln + [' '] * (max([len(i) for i in glyph]) - len(ln)) for ln in glyph]
+
         starts = self._find_strand_starts(glyph)
         for s in starts:
             self._interpret_strand(glyph, s, s)
@@ -315,7 +325,7 @@ class Lexer:
                     not any(all(c == ' ' for c in program[y]) for y in range(s["y"],e["y"])):
 
                     # no col to the right or all blanks to the right and no vert break in the middle
-                    if (e["y"] == len(program)-1) or \
+                    if e["y"] == len(program)-1 or \
                         (all(c == ' ' for c in [arr[e["x"]+1] if len(arr) > e["x"]+1 else ' ' for arr in program[s["y"]:e["y"]]])) and \
                         not any(all(c == ' ' for c in [arr[x] if len(arr) > x else ' ' for arr in program[s["y"]:e["y"]]]) for x in range(s["x"],e["x"])):
 
@@ -327,7 +337,10 @@ class Lexer:
     def _load_primes(self, glyphs):
         "Load a list of primes up to the length of the longest dimension of any glyph"
         self.primes = [1]
-        primes_to_count = max(len(glyphs[0]), *[len(i['glyph']) for i in glyphs])
+        primes_to_count = max( \
+            *[len(i['glyph']) for i in glyphs], \
+            *[len(i['glyph'][0]) for i in glyphs] \
+        )
         for num in range(2, primes_to_count ** 2):
             if all(num%i!=0 for i in range(2,int(math.sqrt(num))+1)):
                 self.primes.append(num)
@@ -362,7 +375,65 @@ class Lexer:
         return block_tree
 
 
-    def lex_program(self, program):
+    def _parse_glyphs(self, glyphs):
+        "Arrange Strands in order to be run and fill out with what they assign to, what is tested, etc"
+
+        for glyph in glyphs:
+            order = 0
+            count_per_list = {}
+
+            # primes list count = max number of lines in a glyph
+            for idx in range(len(self.primes)):
+                count_per_list[idx] = 0
+
+            # build out new array in sort order
+            sorted_tokens = []
+
+            # Tokens read in X, Y order
+            for token in \
+                [t for t in sorted(glyph["tokens"], \
+                key=lambda x: (x['x'], x['y'])) if t["type"] != "question_marker"]:
+
+                token["list"] = self.primes[token["y"]]
+                token["order"] = order
+                order += 1
+                if token["subtype"] != "list2list":
+                    token["assign_to_cell"] = count_per_list[token["y"]]
+                    count_per_list[token["y"]] += 1
+                sorted_tokens.append(token)
+
+            # Question Markers are run last
+            # read in vertical order
+            for idx, token in \
+                enumerate([t for t in sorted(glyph["tokens"], \
+                key=lambda x: x['y']) if t["type"] == "question_marker"]):
+
+                if idx == 0:
+                    token["subtype"] = "first"
+                    token["order"] = order
+                    order += 1
+                    sorted_tokens.append(token)
+                    first_qm = token
+                elif idx == 1:
+                    token["subtype"] = "second"
+                    if first_qm["end_x"] != token["x"] or first_qm["end_y"] != token["y"]:
+                        raise RivuletSyntaxError("A second question marker must begin just below where the first ends")
+                    first_qm["second"] = token
+                else:
+                    raise RivuletSyntaxError("Invalid number of question markers: only 0 or 2 are allowed in a glyph")
+            
+            for token in [t for t in sorted_tokens if t["subtype"] == "ref"]:
+                ref = [t for t in sorted_tokens if t["y"] == token["end_y"] and t["x"] < token["end_x"]]
+                if not ref:
+                    token["ref_cell"] = [self.primes[token["end_y"]], 0]
+                else:
+                    token["ref_cell"] = [self.primes[token["end_y"]], min(t["assign_to_cell"] for t in ref) + 1]
+
+            glyph['tokens'] = sorted_tokens
+            print(glyph["tokens"])
+
+
+    def parse_program(self, program):
         "Parse a Rivulet program and return a list of commands"
 
         # turn into a grid
@@ -380,9 +451,11 @@ class Lexer:
         # the primes for the whole program
         self._load_primes(glyphs)
 
-        for block in glyphs:
-            block["tokens"] = self.lex_glyph(block["glyph"])
-
-        # debug
         for glyph in glyphs:
-            print(f"tokens: {glyph["tokens"]}")
+            glyph["tokens"] = self._lex_glyph(glyph["glyph"])
+            # if len(glyph["glyph"])
+            print(glyph["tokens"])
+
+        # re-arranges and decorates the tokens for each glyph in place
+        self._parse_glyphs(glyphs)
+        return glyphs

@@ -4,7 +4,7 @@ Test strand analysis in lexer
 """
 import copy
 import pytest
-from lexer import Lexer
+from riv_parser import Parser
 
 zeroes_st_glyph = """
   ╰──╮ ╭───╯╭──╯
@@ -20,7 +20,7 @@ zeroes_st_glyph = zeroes_st_glyph[1:] # remove first line
 
 def test_find_starts_data_strands():
     "Find the start of every strand"
-    intr = Lexer()
+    intr = Parser()
     gl = copy.deepcopy(zeroes_st_glyph)
     starts = intr._find_strand_starts(gl)
     assert len(starts) == 7
@@ -42,10 +42,10 @@ def test_find_starts_data_strands():
 
 def test_lex_zeroes():
     "Test each strand is a value strand with value 0"
-    intr = Lexer()
+    lexr = Parser()
     gl = [{"glyph": copy.deepcopy(zeroes_st_glyph)}]
-    intr._load_primes(gl)
-    starts = intr.lex_glyph(gl[0]["glyph"])
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
     for s in starts:
       assert s["type"] == "data"
       assert s["subtype"] == "value"
@@ -61,10 +61,10 @@ glyph_with_ref_strand_vert = glyph_with_ref_strand_vert[1:] # remove first line
 
 def test_glyph_with_ref_strand_vert():
     "Test a glyph with an action element strand"
-    intr = Lexer()
+    lexr = Parser()
     gl = [{"glyph": copy.deepcopy(glyph_with_ref_strand_vert)}]
-    intr._load_primes(gl)
-    starts = intr.lex_glyph(gl[0]["glyph"])
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
     assert len(starts) == 1
     assert starts[0]["type"] == "data"
     assert starts[0]["subtype"] == "ref"
@@ -87,10 +87,10 @@ glyph_with_action_strand = glyph_with_action_strand[1:] # remove first line
 
 def test_identify_action_element_strand():
     "Test a glyph with an action element strand"
-    intr = Lexer()
+    lexr = Parser()
     gl = [{"glyph": copy.deepcopy(glyph_with_action_strand)}]
-    intr._load_primes(gl)
-    starts = intr.lex_glyph(gl[0]["glyph"])
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
     assert len(starts) == 4
     assert starts[3]["type"] == "action"
     assert starts[3]["subtype"] == "element"
@@ -110,10 +110,10 @@ glyph_with_action_list_strand = glyph_with_action_list_strand[1:] # remove first
 
 def test_identify_action_list_strand():
     "Test a glyph with an action list strand"
-    intr = Lexer()
+    lexr = Parser()
     gl = [{"glyph": copy.deepcopy(glyph_with_action_list_strand)}]
-    intr._load_primes(gl)
-    starts = intr.lex_glyph(gl[0]["glyph"])
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
     assert len(starts) == 4
     assert starts[3]["type"] == "action"
     assert starts[3]["subtype"] == "list"
@@ -133,10 +133,10 @@ glyph_with_action_horz_l2l_strand = glyph_with_action_horz_l2l_strand[1:] # remo
 
 def test_identify_action_horz_l2l_strand():
     "Test a glyph with an action list strand"
-    intr = Lexer()
+    lexr = Parser()
     gl = [{"glyph": copy.deepcopy(glyph_with_action_horz_l2l_strand)}]
-    intr._load_primes(gl)
-    starts = intr.lex_glyph(gl[0]["glyph"])
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
     assert len(starts) == 4
     assert starts[3]["type"] == "action"
     assert starts[3]["subtype"] == "list2list"
@@ -158,18 +158,18 @@ glyph_with_question_strands = glyph_with_question_strands[1:] # remove first lin
 
 def test_correct_count_ends_with_left_facing():
     "Find the correct starts for a glyph with a question strand set where a questions strand ends facing left"
-    intr = Lexer()
+    lexr = Parser()
     gl = [{"glyph": copy.deepcopy(glyph_with_question_strands)}]
-    intr._load_primes(gl)
-    starts = intr._find_strand_starts(gl[0]["glyph"])
+    lexr._load_primes(gl)
+    starts = lexr._find_strand_starts(gl[0]["glyph"])
     assert len(starts) == 5
 
 def test_identify_question_strands():
     "Test a glyph with a question strand set"
-    intr = Lexer()
+    lexr = Parser()
     gl = [{"glyph": copy.deepcopy(glyph_with_question_strands)}]
-    intr._load_primes(gl)
-    starts = intr.lex_glyph(gl[0]["glyph"])
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
     assert starts[3]["type"] == "question_marker"
     assert starts[3]['x'] == 10
     assert starts[3]['y'] == 0
@@ -180,3 +180,84 @@ def test_identify_question_strands():
     assert starts[4]['y'] == 5
     assert starts[4]['end_x'] == 9
     assert starts[4]['end_y'] == 7
+
+glyph_with_uneven_lines = """
+╰──╮    ╰─╮
+   │╰─╮   │╰─╮
+     ─┘ ──┘ ─┘
+"""
+glyph_with_uneven_lines = [list(ln) for ln in glyph_with_uneven_lines.splitlines()] # format
+glyph_with_uneven_lines = glyph_with_uneven_lines[1:] # remove first line
+
+def test_lex_glyph_with_uneven_lines():
+    "Test a glyph with an action list strand"
+    lexr = Parser()
+    gl = [{"glyph": copy.deepcopy(glyph_with_uneven_lines)}]
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
+    assert len(starts) == 4
+
+left_facing_ref_strand = """
+╰─╮
+╴─┘
+"""
+left_facing_ref_strand = [list(ln) for ln in left_facing_ref_strand.splitlines()] # format
+left_facing_ref_strand = left_facing_ref_strand[1:] # remove first line
+
+def test_left_facing_ref_strand():
+    lexr = Parser()
+    gl = [{"glyph": copy.deepcopy(left_facing_ref_strand)}]
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
+    assert starts[0]["type"] == "data"
+    assert starts[0]["subtype"] == "ref"
+
+right_facing_ref_strand = """
+╭─╯
+└─╶
+"""
+right_facing_ref_strand = [list(ln) for ln in right_facing_ref_strand.splitlines()] # format
+right_facing_ref_strand = right_facing_ref_strand[1:] # remove first line
+
+def test_right_facing_ref_strand():
+    lexr = Parser()
+    gl = [{"glyph": copy.deepcopy(right_facing_ref_strand)}]
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
+    assert starts[0]["type"] == "data"
+    assert starts[0]["subtype"] == "ref"
+
+third_left_facing_ref_strand = """
+ ╰──╮    ╰─╮
+    │╰─╮ ╴─┘╰─╮
+      ─┘     ─┘
+"""
+third_left_facing_ref_strand = [list(ln) for ln in third_left_facing_ref_strand.splitlines()] # format
+third_left_facing_ref_strand = third_left_facing_ref_strand[1:] # remove first line
+
+def test_third_left_facing_ref_strand():
+    lexr = Parser()
+    gl = [{"glyph": copy.deepcopy(third_left_facing_ref_strand)}]
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
+    assert starts[1]["type"] == "data"
+    assert starts[1]["subtype"] == "ref"
+
+ref_from_low_road = """
+╰──╮   ╵
+   │╰─╮│╰─╮
+     ─┘│ ─┘
+       │
+       │
+       └─╯
+"""
+ref_from_low_road = [list(ln) for ln in ref_from_low_road.splitlines()] # format
+ref_from_low_road = ref_from_low_road[1:] # remove first line
+
+def test_ref_from_low_road():
+    lexr = Parser()
+    gl = [{"glyph": copy.deepcopy(ref_from_low_road)}]
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
+    assert starts[3]["type"] == "data"
+    assert starts[3]["subtype"] == "ref"

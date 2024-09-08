@@ -1,0 +1,170 @@
+# pylint: skip-file
+"""
+Test glyph full parsing
+"""
+import copy
+import pytest
+from riv_parser import Parser
+
+glyph_with_one_list = """
+╵╰──╮╰─╮╰─╮╰─╮
+    │ ─┘  │ ─┘
+        ──┘  ╷
+"""
+
+def test_cell_order_one_list():
+    parser = Parser()
+    block = parser.parse_program(str(glyph_with_one_list))[0]
+    assert block["level"] == 1
+    for i in range(4):
+        assert block["tokens"][i]["list"] == 1
+        assert block["tokens"][i]["assign_to_cell"] == i
+
+glyph_with_one_list_ref_strand = """
+╵╰──╮╰─╮╰─╮╰─╮
+    │ ─┘  │ ─┘
+       ╴──┘  ╷
+"""
+
+def test_cell_order_one_list_ref():
+    parser = Parser()
+    block = parser.parse_program(str(glyph_with_one_list_ref_strand))[0]
+    assert block["level"] == 1
+    for i in range(4):
+        assert block["tokens"][i]["list"] == 1
+        assert block["tokens"][i]["assign_to_cell"] == i
+
+glyph_with_two_lists = """
+╵╰──╮    ╰─╮
+    │╰─╮   │╰─╮
+      ─┘ ──┘ ─┘╷
+"""
+
+def test_cell_order_two_lists():
+    parser = Parser()
+    block = parser.parse_program(str(glyph_with_two_lists))[0]
+    assert block["level"] == 1
+    assert len(block["tokens"]) == 4
+
+    assert block["tokens"][0]["list"] == 1
+    assert block["tokens"][0]["assign_to_cell"] == 0
+    assert block["tokens"][0]["y"] == 0
+
+    assert block["tokens"][1]["list"] == 2
+    assert block["tokens"][1]["assign_to_cell"] == 0
+    assert block["tokens"][1]["y"] == 1
+
+    assert block["tokens"][2]["list"] == 1
+    assert block["tokens"][2]["assign_to_cell"] == 1
+    assert block["tokens"][2]["y"] == 0
+
+    assert block["tokens"][3]["list"] == 2
+    assert block["tokens"][3]["assign_to_cell"] == 1
+    assert block["tokens"][3]["y"] == 1
+
+glyph_with_one_list_question_strand = """
+╵╰──╮╰─╮╷╰─╮
+ ╭─╮│ ─┘│ ─┘
+ │ ╰────┘ ╭─  
+ ╷   ╭────┘
+ ╰───┘     ╷
+"""
+
+def test_cell_order_one_list_question():
+    parser = Parser()
+    block = parser.parse_program(str(glyph_with_one_list_question_strand))[0]
+    assert block["level"] == 1
+
+    # the question marker should appear at the back of the list, not in x,y order
+    for i in range(3):
+        assert block["tokens"][i]["list"] == 1
+        assert block["tokens"][i]["assign_to_cell"] == i
+        assert block["tokens"][i]["type"] == "data"
+
+    assert block["tokens"][3]["type"] == "question_marker"
+    with pytest.raises(KeyError):
+        assert block["tokens"][3]["list"] == None
+    with pytest.raises(KeyError):
+        assert block["tokens"][3]["assign_to_cell"] == None
+
+    assert block["tokens"][3]["second"]["type"] == "question_marker"
+    with pytest.raises(KeyError):
+        assert block["tokens"][3]["second"]["list"] == None
+    with pytest.raises(KeyError):
+        assert block["tokens"][3]["second"]["assign_to_cell"] == None
+
+glyph_with_wide_question = """
+╵╰──╮╰─╮╷╰─╮╭─╮                                ╭─╮
+ ╭─╮│ ─┘│ ─┘│ │                                │ │
+ │ ╰────┘ ╭─┘ │                                │ │
+ ╷   ╭────┘   │                                │ │
+ ╰───┘        ╰────────────────────────────────┘ │╷
+"""
+
+def test_glyph_with_wide_question():
+    parser = Parser()
+    block = parser.parse_program(str(glyph_with_wide_question))[0]
+    assert block["level"] == 1
+
+    # the question marker should appear at the back of the list, not in x,y order
+    for i in range(3):
+        assert block["tokens"][i]["list"] == 1
+        assert block["tokens"][i]["assign_to_cell"] == i
+        assert block["tokens"][i]["type"] == "data"
+
+    assert block["tokens"][3]["type"] == "question_marker"
+    with pytest.raises(KeyError):
+        assert block["tokens"][3]["list"] == None
+    with pytest.raises(KeyError):
+        assert block["tokens"][3]["assign_to_cell"] == None
+
+    assert block["tokens"][3]["second"]["type"] == "question_marker"
+    with pytest.raises(KeyError):
+        assert block["tokens"][3]["second"]["list"] == None
+    with pytest.raises(KeyError):
+        assert block["tokens"][3]["second"]["assign_to_cell"] == None
+
+glyph_with_ref_strand = """
+╵╰──╮    ╰─╮
+    │╰─╮ ╴─┘╰─╮
+      ─┘     ─┘╷
+"""
+
+def test_ref_of_ref_strand():
+    parser = Parser()
+    block = parser.parse_program(str(glyph_with_ref_strand))[0]
+
+    assert block["tokens"][2]["list"] == 1
+    assert block["tokens"][2]["assign_to_cell"] == 1
+    assert block["tokens"][2]["ref_cell"] == [2, 1]
+
+ref_of_ref_upward_facing = """
+╵╰──╮   ╵
+    │╰─╮│ ╰─╮
+      ─┘╰───┘╷
+"""
+
+def test_ref_of_ref_upward_facing():
+    parser = Parser()
+    block = parser.parse_program(str(ref_of_ref_upward_facing))[0]
+
+    assert block["tokens"][2]["list"] == 2
+    assert block["tokens"][2]["assign_to_cell"] == 1
+    assert block["tokens"][2]["ref_cell"] == [1, 1]
+
+ref_from_high_row = """
+╵╰──╮   ╵
+    │╰─╮│╰─╮
+      ─┘│ ─┘
+        │
+        │
+        └─╯╷
+"""
+
+def test_ref_from_high_row():
+    parser = Parser()
+    block = parser.parse_program(str(ref_from_high_row))[0]
+
+    assert block["tokens"][3]["list"] == 11
+    assert block["tokens"][3]["assign_to_cell"] == 0
+    assert block["tokens"][3]["ref_cell"] == [1, 1]

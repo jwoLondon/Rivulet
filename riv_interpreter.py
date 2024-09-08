@@ -1,6 +1,6 @@
 "Interpreter for the Rivulet esolang"
 from argparse import ArgumentParser
-from lexer import Lexer
+from riv_parser import Parser
 
 VERSION = "0.1"
 
@@ -19,25 +19,25 @@ class Interpreter:
         with open(progfile, "r", encoding="utf-8") as file:
             program = file.read()
 
-        lexer = Lexer()
+        parser = Parser()
 
-        lexer.lex_program(program)
+        parser.parse_program(program)
 
         return ""
 
 
 if __name__ == "__main__":
 
-    parser = ArgumentParser(description=f'Rivulet Interpreter {VERSION}', 
+    arg_parser = ArgumentParser(description=f'Rivulet Interpreter {VERSION}', 
                             epilog='More at https://danieltemkin.com/Esolangs/Rivulet')
 
-    parser.add_argument('progfile', metavar='progfile', type=str, 
+    arg_parser.add_argument('progfile', metavar='progfile', type=str, 
                         help='Rivulet program file')
-    parser.add_argument('--out', dest='outfile', default=None, 
+    arg_parser.add_argument('--out', dest='outfile', default=None, 
                         help='where to write output from the program')
-    parser.add_argument('-v', dest='verbose', action='store_true', 
+    arg_parser.add_argument('-v', dest='verbose', action='store_true', 
                         default=False, help='verbose logging')
-    args = parser.parse_args()
+    args = arg_parser.parse_args()
 
     intr = Interpreter()
     result = intr.interpret_file(args.progfile, args.outfile, args.verbose)
