@@ -92,7 +92,11 @@ class Parser:
             if not nbr_reads:
                 continue
 
-            if any(n for n in nbr_reads[0] if OPPOSITE_DIR[direction] in n["dir"]):
+            # we ignore pre_start as it is decorative and adds no value
+            # NOTE: a pre_start may become required for left/right hooks
+            # as the language develops (need to see how much it affects
+            # aesthetics in specific cases)
+            if any(n for n in nbr_reads[0] if OPPOSITE_DIR[direction] in n["dir"] and n["pos"] != "pre_start"):
                 successful_matches.append(direction)
 
         return successful_matches
@@ -132,7 +136,11 @@ class Parser:
             "y": y,
             "dir": successful_matches[0],
             "pos": "start",
-            "type": reading_for_match[0]["type"]
+            "type": reading_for_match[0]["type"],
+            "action": None,
+            "value": None,
+            "vert_value": None,
+            "subtype": None
         }
 
 
@@ -187,9 +195,9 @@ class Parser:
         # if it is moving left/right with a continue, add to value
         if "continue" in readings and next_dir:
 
-            if not "value" in start:
+            if not start["value"]:
                 start["value"] = 0
-            if not "vert_value" in start:
+            if not start["vert_value"]:
                 start["vert_value"] = 0
 
             # if it's straight and left or right, we add or subtract the prime
@@ -389,10 +397,13 @@ class Parser:
             # build out new array in sort order
             sorted_tokens = []
 
-            # Tokens read in X, Y order
+            # Tokens read in X, Y order and exclude tokens that run later
+            # or modify other tokens
             for token in \
                 [t for t in sorted(glyph["tokens"], \
-                key=lambda x: (x['x'], x['y'])) if t["type"] != "question_marker"]:
+                key=lambda x: (x['x'], x['y'])) \
+                    if t["type"] != "question_marker"
+                    and t["type"] != "action"]:
 
                 token["list"] = self.primes[token["y"]]
                 token["order"] = order
@@ -402,7 +413,7 @@ class Parser:
                     count_per_list[token["y"]] += 1
                 sorted_tokens.append(token)
 
-            # Question Markers are run last
+            # Question Markers are to be run last
             # read in vertical order
             for idx, token in \
                 enumerate([t for t in sorted(glyph["tokens"], \
@@ -421,7 +432,8 @@ class Parser:
                     first_qm["second"] = token
                 else:
                     raise RivuletSyntaxError("Invalid number of question markers: only 0 or 2 are allowed in a glyph")
-            
+
+            # Ref markers determine their reference cells
             for token in [t for t in sorted_tokens if t["subtype"] == "ref"]:
                 ref = [t for t in sorted_tokens if t["y"] == token["end_y"] and t["x"] < token["end_x"]]
                 if not ref:
@@ -429,6 +441,24 @@ class Parser:
                 else:
                     token["ref_cell"] = [self.primes[token["end_y"]], min(t["assign_to_cell"] for t in ref) + 1]
 
+            # Action strands are added to their respective data strands
+
+            curr_x = 0
+            x_count = 0
+            for actiontoken in \
+                [t for t in sorted(glyph["tokens"], \
+                    key=lambda x: (x['x'], x['y'])) \
+                    if t["type"] == "action"]:
+                if int(actiontoken["x"]) == curr_x:
+                    x_count += 1
+                else:
+                    x_count = 0
+                    curr_x = int(actiontoken["x"])
+                for idx, datanode in enumerate([t for t in sorted_tokens \
+                    if t["type"] == "data" and t["x"] == actiontoken["x"]]):
+                    if(x_count == idx):
+                        datanode["action"] = actiontoken
+                
             glyph['tokens'] = sorted_tokens
             print(glyph["tokens"])
 

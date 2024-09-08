@@ -139,7 +139,7 @@
         "name":     "r_end",
         "readings": [
             {
-                "pos": "end",
+                "pos": "pre_start",
                 "dir": "left"
             },
             {
@@ -154,7 +154,7 @@
         "name":     "l_end",
         "readings": [
             {
-                "pos": "end",
+                "pos": "pre_start",
                 "dir": "right"
             },
             {

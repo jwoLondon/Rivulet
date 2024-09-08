@@ -232,8 +232,7 @@ third_left_facing_ref_strand = """
     │╰─╮ ╴─┘╰─╮
       ─┘     ─┘
 """
-third_left_facing_ref_strand = [list(ln) for ln in third_left_facing_ref_strand.splitlines()] # format
-third_left_facing_ref_strand = third_left_facing_ref_strand[1:] # remove first line
+third_left_facing_ref_strand = [list(ln) for ln in third_left_facing_ref_strand.splitlines()][1:] # format and remove first line
 
 def test_third_left_facing_ref_strand():
     lexr = Parser()
@@ -261,3 +260,41 @@ def test_ref_from_low_road():
     starts = lexr._lex_glyph(gl[0]["glyph"])
     assert starts[3]["type"] == "data"
     assert starts[3]["subtype"] == "ref"
+
+lex_left_prestart ="""
+╶╮
+ ╰─╮
+ ╭─┘
+ │        
+ │           
+ ╰─
+"""
+lex_left_prestart = [list(ln) for ln in lex_left_prestart.splitlines()][1:] # format
+
+def test_lex_left_prestart():
+    lexr = Parser()
+    gl = [{"glyph": copy.deepcopy(lex_left_prestart)}]
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
+    assert len(starts) == 1
+    assert starts[0]["type"] == "data"
+    assert starts[0]["subtype"] == "value"
+
+lex_right_prestart ="""
+╭╴
+╰─╮
+╭─┘
+│        
+│           
+╰─
+"""
+lex_right_prestart = [list(ln) for ln in lex_right_prestart.splitlines()][1:] # format
+
+def test_lex_right_prestart():
+    lexr = Parser()
+    gl = [{"glyph": copy.deepcopy(lex_right_prestart)}]
+    lexr._load_primes(gl)
+    starts = lexr._lex_glyph(gl[0]["glyph"])
+    assert len(starts) == 1
+    assert starts[0]["type"] == "action"
+    assert starts[0]["subtype"] == "list"

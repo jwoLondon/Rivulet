@@ -168,3 +168,74 @@ def test_ref_from_high_row():
     assert block["tokens"][3]["list"] == 11
     assert block["tokens"][3]["assign_to_cell"] == 0
     assert block["tokens"][3]["ref_cell"] == [1, 1]
+
+ref_value_assignment = """
+ 1 ╵╰──╮╰─ ╰──╮ ╶╮
+ 2    ─┘     ─┘  ╰─╮
+ 3               ╭─┘
+ 5               │        
+ 7               │           
+11               ╰─ ╷
+"""
+def test_ref_value_assignment():
+    parser = Parser()
+    block = parser.parse_program(str(ref_value_assignment))[0]
+
+    for i in range(4):
+        assert block["tokens"][i]["list"] == 1
+        assert block["tokens"][i]["type"] == "data"
+        assert block["tokens"][i]["subtype"] == "value"
+
+    assert block["tokens"][0]["value"] == 0
+    assert block["tokens"][1]["value"] == 1
+    assert block["tokens"][2]["value"] == 0
+    assert block["tokens"][3]["value"] == 10
+
+ref_value_assignment_2 = """
+ 1 ╵╰──╮╰─ ╭──╯ ╶╮
+ 2    ─┘   └─    │
+ 3    ╭──────────┘
+ 5    └────────  ╷
+"""
+def test_ref_value_assignment_2():
+    parser = Parser()
+    block = parser.parse_program(str(ref_value_assignment_2))[0]
+
+    for i in range(4):
+        assert block["tokens"][i]["list"] == 1
+        assert block["tokens"][i]["type"] == "data"
+        assert block["tokens"][i]["subtype"] == "value"
+
+    assert block["tokens"][0]["value"] == 0
+    assert block["tokens"][1]["value"] == 1
+    assert block["tokens"][2]["value"] == 0
+    assert block["tokens"][3]["value"] == 10
+
+multiple_ref_assignments = """
+ 1 ╵╵     ╭───╮ ╭─
+ 2    ╴─╮╶╯╶╮ ╷╶╯
+ 3  ╵╰──┘   │
+ 5  ╰───────╯
+ 7   ╭╴     ╭╴
+11   │      │     ╷
+"""
+def test_correct_ref_cells():
+    parser = Parser()
+    block = parser.parse_program(str(multiple_ref_assignments))[0]
+
+    assert len(block["tokens"]) == 4
+    assert block["tokens"][0]["ref_cell"] == [2, 0]
+
+def test_action_strands_connect_to_correct_data_strands():
+    parser = Parser()
+    block = parser.parse_program(str(multiple_ref_assignments))[0]
+
+    assert len(block["tokens"]) == 4
+    assert block["tokens"][1]["action"] == None
+    assert block["tokens"][3]["action"] == None
+
+    assert block["tokens"][0]["action"]['x'] == 2
+    assert block["tokens"][0]["action"]['y'] == 4
+
+    assert block["tokens"][2]["action"]['x'] == 9
+    assert block["tokens"][2]["action"]['y'] == 4

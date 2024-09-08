@@ -6,8 +6,10 @@
         {"name": "overwrite",
         "note": "assignment, overwriting existing value (rather than adding)"},
     "1":
-        {"name": "",
-        "note": ""},
+        {"name": "insert",
+        "note": "inserts value after indicated cell (applied immediately)",
+        "list_name": "append",
+        "list_note": "appends value to list"},
     "-1": 
         {"name": "subtraction_assignment",
         "note": "add/subtract, similar to the default addition_assignment"},
