@@ -1,7 +1,7 @@
 import json
 import math
 from riv_exceptions import InternalError, RivuletSyntaxError
-# pylint: disable=locally-disabled, fixme, line-too-long
+# pylint: disable=locally-disabled, fixme, line-too-long, consider-using-enumerate
 
 VERSION = "0.1"
 
@@ -295,6 +295,21 @@ class Parser:
         return starts
 
 
+    def _has_continuation(self, x, y, program, dirtn):
+        "Look for continuations, meant to rule out potential Starts and Ends"
+        try:
+            neighbor = self._get_neighbor(x, y, dirtn, program, include_coords=True)
+        except IndexError:
+            return False # if we are at the edge of the glyph, we can't have a continuation
+        if neighbor:
+            n_read = [l["readings"] for l in self.lexicon if neighbor["symbol"] in l["symbol"]]
+            if n_read:
+                n_read = n_read[0]
+            if n_read and len([t for t in n_read if OPPOSITE_DIR[dirtn] in t["dir"]])  != 0:
+                return True # has a continuation
+        return False
+
+
     def _locate_glyphs(self, program):
         """Find all the Starts and Ends where:
             - everything in the col left of Start down to End is blank
@@ -307,23 +322,26 @@ class Parser:
 
         starts = []
         ends = []
-        level = 1
 
         for y, ln in enumerate(program):
             for x in _chars_in_list(self.get_symbol_by_name("start_glyph"), ln):
                 # make sure immediate right does not also have start symbol
-                if x != len(ln) - 1 and not ln[x+1] in self.get_symbol_by_name("start_glyph"):
-                    starts.append({"y":y, "x":x})
+                if x != len(ln) - 1 and not ln[x+1] in self.get_symbol_by_name("start_glyph") and not self._has_continuation(x, y, program, "up") and not self._has_continuation(x, y, program, "down"):
+                    level = 1
                     if x > 0 and ln[x-1] in self.get_symbol_by_name("start_glyph"):
                         # find the level of the glyph by walking to the left
                         for i in reversed(range(0, x)):
                             if ln[i] in self.get_symbol_by_name("start_glyph"):
                                 level += 1
+                    starts.append({"y":y, "x":x, "level":level})
             for x in _chars_in_list(self.get_symbol_by_name("end_glyph"), ln):
-                ends.append({"y":y, "x":x})
+                if not self._has_continuation(x, y, program, "down") and not self._has_continuation(x, y, program, "up"):
+                    ends.append({"y":y, "x":x})
 
+        ends_used = []
         for s in starts:
-            for e in ends:
+            start_matched = False
+            for e in [e for e in ends if e not in ends_used]:
 
                 if e["x"] <= s["x"] or e["y"] <= s["y"]:
                     continue
@@ -334,11 +352,19 @@ class Parser:
 
                     # no col to the right or all blanks to the right and no vert break in the middle
                     if e["y"] == len(program)-1 or \
-                        (all(c == ' ' for c in [arr[e["x"]+1] if len(arr) > e["x"]+1 else ' ' for arr in program[s["y"]:e["y"]]])) and \
-                        not any(all(c == ' ' for c in [arr[x] if len(arr) > x else ' ' for arr in program[s["y"]:e["y"]]]) for x in range(s["x"],e["x"])):
+                        ((all(c == ' ' for c in [arr[e["x"]+1] if len(arr) > e["x"]+1 else ' ' for arr in program[s["y"]:e["y"]]])) and \
+                        not any(all(c == ' ' for c in [arr[x] if len(arr) > x else ' ' for arr in program[s["y"]:e["y"]+1]]) for x in range(s["x"],e["x"]))):
 
-                        glyph_locs.append({"start":s,"end":e,"level":level})
-
+                        glyph_locs.append({"start":s,"end":e,"level":s["level"]})
+                        del s["level"]
+                        ends_used.append(e)
+                        start_matched = True
+                        break
+            if not start_matched:
+                raise RivuletSyntaxError(f"Start glyph at {s['x']},{s['y']} has no matching end")
+        if len(ends_used) != len(ends):
+            e = min([e for e in ends if e not in ends_used])
+            raise RivuletSyntaxError(f"End glyph at {e['x'],e['y']} has no corresponding Start")
         return glyph_locs
 
 
@@ -440,7 +466,7 @@ class Parser:
                     token["ref_cell"] = [self.primes[token["end_y"]], 0]
                 else:
                     token["ref_cell"] = [self.primes[token["end_y"]], min(t["assign_to_cell"] for t in ref) + 1]
-            
+
             # Action strands are added to their respective data strands
             # The top action strand for an x value goes to the top data strand for that x value
             curr_x = 0

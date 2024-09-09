@@ -212,11 +212,11 @@ def test_ref_value_assignment_2():
     assert block["tokens"][3]["value"] == 10
 
 multiple_ref_assignments = """
- 1 ╵╵     ╭───╮ ╭─
- 2    ╴─╮╶╯╶╮ ╷╶╯
- 3  ╵╰──┘   │
- 5  ╰───────╯
- 7   ╭╴     ╭╴
+ 1 ╵╵     ╭───╮ ╭─ 
+ 2    ╴─╮╶╯╶╮ ╷╶╯  
+ 3  ╵╰──┘   │      
+ 5  ╰───────╯      
+ 7   ╭╴     ╭╴     
 11   │      │     ╷
 """
 def test_correct_ref_cells():

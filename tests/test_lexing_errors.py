@@ -52,4 +52,5 @@ def test_bad_start():
     with pytest.raises(RivuletSyntaxError) as err:
         lexr.parse_program(gl)
 
-    assert "No glyph" in str(err.value)
+    assert "corresponding Start" in str(err.value)
+    assert "5, 4" in str(err.value)
