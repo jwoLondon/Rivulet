@@ -333,6 +333,8 @@ class Parser:
                         for i in reversed(range(0, x)):
                             if ln[i] in self.get_symbol_by_name("start_glyph"):
                                 level += 1
+                            else:
+                                break
                     starts.append({"y":y, "x":x, "level":level})
             for x in _chars_in_list(self.get_symbol_by_name("end_glyph"), ln):
                 if not self._has_continuation(x, y, program, "down") and not self._has_continuation(x, y, program, "up"):
