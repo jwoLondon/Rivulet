@@ -268,7 +268,7 @@ def test_level_for_2_glyphs():
     assert glyph_locs[0]['level'] == 1
     assert glyph_locs[1]['level'] == 1 
 
-glyph_load_five_glyphs = """
+glyph_load_five_glyphs_vert = """
  1 ╵╰──╮╰─ ╭──╯ ╶╮
  2    ─┘   └─    │
  3    ╭──────────┘
@@ -301,11 +301,35 @@ glyph_load_five_glyphs = """
  7  ╭──╯ │ │
 11  └────╯ │╷
 """
-glyph_load_five_glyphs = [list(ln) for ln in glyph_load_five_glyphs.splitlines()] # 
-def test_glyph_load_five_glyphs():
+glyph_load_five_glyphs_vert = [list(ln) for ln in glyph_load_five_glyphs_vert.splitlines()] # 
+def test_level_five_glyphs_vert():
     "To address error that level was passed from previous glyph"
     intr = Parser()
-    pr = copy.deepcopy(glyph_load_five_glyphs)
+    pr = copy.deepcopy(glyph_load_five_glyphs_vert)
+    pr = intr._remove_blank_lines(pr)
+    glyph_locs = intr._locate_glyphs(pr)
+    assert len(glyph_locs) == 5
+    assert glyph_locs[0]['level'] == 1
+    assert glyph_locs[1]['level'] == 2 
+    assert glyph_locs[2]['level'] == 2 
+    assert glyph_locs[3]['level'] == 2 
+    assert glyph_locs[4]['level'] == 2 
+
+glyph_load_five_glyphs_horiz = """
+ 1 ╵╰──╮╰─ ╭──╯ ╶╮ ╵╵     ╭───╮ ╭─ ╵╵╶╮ │ │ │    ╵╵ ╭──╮╶──╮╶──╮          ╵╵╭─  ╭─╮
+ 2    ─┘   └─    │    ╴─╮╶╯╶╮ ╷╶╯   ╵ │ │╶╯╶╯╭─╶   ╶╯ ─╯ ╭─╯╶╮ │ ╭─╶ ╭─╶    │   │ │ 
+ 3    ╭──────────┘  ╵╰──┘   │       ╰─╯╶╯    └╴╷        ╶╯   └─╯╶╯   │      │ ╷ │ ╷
+ 5    └────────  ╷  ╰───────╯                                    ╭╴ ╶╯     ╶╯ │ │ │
+ 7                   ╭╴     ╭╴                                 │ │         ╭──╯ │ │
+11                   │      │                                  └─╯     ╷   └────╯ │╷
+13                 │ │    │ │           
+17                 ╰─╯    ╰─╯    ╷
+"""
+glyph_load_five_glyphs_horiz = [list(ln) for ln in glyph_load_five_glyphs_horiz.splitlines()] # 
+def test_level_five_glyphs_horiz():
+    "To address error that level was passed from previous glyph"
+    intr = Parser()
+    pr = copy.deepcopy(glyph_load_five_glyphs_horiz)
     pr = intr._remove_blank_lines(pr)
     glyph_locs = intr._locate_glyphs(pr)
     assert len(glyph_locs) == 5
