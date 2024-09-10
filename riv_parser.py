@@ -353,9 +353,9 @@ class Parser:
                     not any(all(c == ' ' for c in program[y]) for y in range(s["y"],e["y"])):
 
                     # no col to the right or all blanks to the right and no vert break in the middle
-                    if e["y"] == len(program)-1 or \
-                        ((all(c == ' ' for c in [arr[e["x"]+1] if len(arr) > e["x"]+1 else ' ' for arr in program[s["y"]:e["y"]]])) and \
-                        not any(all(c == ' ' for c in [arr[x] if len(arr) > x else ' ' for arr in program[s["y"]:e["y"]+1]]) for x in range(s["x"],e["x"]))):
+                    if (e["y"] == len(program)-1 or \
+                        (all(c == ' ' for c in [arr[e["x"]+1] if len(arr) > e["x"]+1 else ' ' for arr in program[s["y"]:e["y"]]]))) and \
+                        not any(all(c == ' ' for c in [arr[x] if len(arr) > x else ' ' for arr in program[s["y"]:e["y"]+1]]) for x in range(s["x"],e["x"])):
 
                         glyph_locs.append({"start":s,"end":e,"level":s["level"]})
                         del s["level"]
@@ -363,10 +363,10 @@ class Parser:
                         start_matched = True
                         break
             if not start_matched:
-                raise RivuletSyntaxError(f"Start glyph at {s['x']},{s['y']} has no matching end")
+                raise RivuletSyntaxError(f"Start glyph at {s['x']}, {s['y']} has no matching end")
         if len(ends_used) != len(ends):
             e = min([e for e in ends if e not in ends_used])
-            raise RivuletSyntaxError(f"End glyph at {e['x'],e['y']} has no corresponding Start")
+            raise RivuletSyntaxError(f"End glyph at {e['x'], e['y']} has no corresponding Start")
         return glyph_locs
 
 

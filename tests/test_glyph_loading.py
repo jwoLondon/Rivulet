@@ -193,11 +193,11 @@ def test_scan_glyph_with_ref_at_end():
 
 # Second level glyph
 fib_2_glyph = """
-╵╵╭─╶ ╮  ╭─┘╭─╶ 
-  │   │╭─┘╭─╯  
-  │╶╮ │╰─ │ 
-  ╰─┘ ╰───┘
-    ╮
+╵╵╭─╶ ╶╮  ╭─┘╭─╶ 
+  │  ╶╮│╭─┘╭─╯  
+  │╶╮ ││╰─ │ 
+  ╰─┘ │╰───┘
+   ╶╮ │
     │         ╷
 """
 
@@ -225,10 +225,12 @@ whitespace_top_glyph = """
 
 
 
- ╵╭─╶ ╮  ╭─┘╭─╶ 
-  │   │╭─┘╭─╯  
-  │╶╮ │╰─ │ 
-  ╰─┘ ╰───┘   ╷
+╵╵╭─╶ ╶╮  ╭─┘╭─╶ 
+  │  ╶╮│╭─┘╭─╯  
+  │╶╮ ││╰─ │ 
+  ╰─┘ │╰───┘
+   ╶╮ │
+    │         ╷
 """
 
 whitespace_top_glyph = [list(ln) for ln in whitespace_top_glyph.splitlines()] # format
