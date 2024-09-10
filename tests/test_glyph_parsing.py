@@ -35,9 +35,9 @@ def test_cell_order_one_list_ref():
         assert block["tokens"][i]["assign_to_cell"] == i
 
 glyph_with_two_lists = """
-╵╰──╮    ╰─╮
-    │╰─╮   │╰─╮
-      ─┘ ──┘ ─┘╷
+╵╰──╮   ╰─╮
+    │╰─╮  │╰─╮
+      ─┘╶─┘ ─┘╷
 """
 
 def test_cell_order_two_lists():
@@ -125,9 +125,10 @@ def test_glyph_with_wide_question():
         assert block["tokens"][3]["second"]["assign_to_cell"] == None
 
 glyph_with_ref_strand = """
-╵╰──╮    ╰─╮
-    │╰─╮ ╴─┘╰─╮
-      ─┘     ─┘╷
+╵╰──╮   ╰─╮
+    │╰─╮╴─┘╰─╮
+      ─┘     │
+           ──┘╷
 """
 
 def test_ref_of_ref_strand():
@@ -170,12 +171,12 @@ def test_ref_from_high_row():
     assert block["tokens"][3]["ref_cell"] == [1, 1]
 
 ref_value_assignment = """
- 1 ╵╰──╮╰─ ╰──╮ ╶╮
- 2    ─┘     ─┘  ╰─╮
- 3               ╭─┘
- 5               │        
- 7               │           
-11               ╰─ ╷
+ 1 ╵╰──╮╰─╴╰──╮╶╮
+ 2    ─┘     ─┘ ╰─╮
+ 3              ╭─┘
+ 5              │        
+ 7              │           
+11              ╰─ ╷
 """
 def test_ref_value_assignment():
     parser = Parser()
