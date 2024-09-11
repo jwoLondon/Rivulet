@@ -309,6 +309,39 @@ class Parser:
                 return True # has a continuation
         return False
 
+    def _match_starts_ends(self, starts, ends):
+        matches = []
+        for e in ends:
+            # build possible Starts for this End
+            possible_starts = []
+
+            # start has to have a smaller x value and y value
+            # exclude starts where another end would be in its block
+            for s in [s for s in starts if s['x'] < e['x'] and s['y'] < e['y']]:
+                in_betweens = [os for os in starts if os['x'] >= s['x'] and os['x'] <= e['x'] and os['y'] >= s['y'] and os['y'] <= e['y'] and s != os]
+
+                if len(in_betweens) == 0:
+                    possible_starts.append(s)
+
+            if not possible_starts:
+                raise RivuletSyntaxError(f"End glyph at {e['x']}, {e['y']} has no corresponding Start")
+
+            # get the cloest start for that end
+            closest_start = min(possible_starts, key=lambda s: math.dist([s["x"], s["y"]], [e["x"], e["y"]]))
+
+            level = closest_start["level"]
+            del closest_start["level"]
+            matches.append({"start": closest_start, "end": e, "level": level})
+
+            # remove that starta s a possibility for the ohter ends
+            starts.remove(closest_start)
+
+        if len(starts) > 0:
+            s = starts[0]
+            raise RivuletSyntaxError(f"Start glyph at {s['x']}, {s['y']} has no matching end")
+
+        return sorted(matches, key=lambda x: (x["start"]['y'], x["start"]['x']))
+
 
     def _locate_glyphs(self, program):
         """Find all the Starts and Ends where:
@@ -318,7 +351,6 @@ class Parser:
             - the Start and End are not on the same line
           Determine level of glyph
         """
-        glyph_locs = [] # return set
 
         starts = []
         ends = []
@@ -326,7 +358,11 @@ class Parser:
         for y, ln in enumerate(program):
             for x in _chars_in_list(self.get_symbol_by_name("start_glyph"), ln):
                 # make sure immediate right does not also have start symbol
-                if x != len(ln) - 1 and not ln[x+1] in self.get_symbol_by_name("start_glyph") and not self._has_continuation(x, y, program, "up") and not self._has_continuation(x, y, program, "down"):
+                # it does not have a continuation up or down
+                if (x != len(ln) - 1 and not ln[x+1] in self.get_symbol_by_name("start_glyph")) \
+                \
+                and not self._has_continuation(x, y, program, "up") \
+                and not self._has_continuation(x, y, program, "down"):
                     level = 1
                     if x > 0 and ln[x-1] in self.get_symbol_by_name("start_glyph"):
                         # find the level of the glyph by walking to the left
@@ -336,38 +372,13 @@ class Parser:
                             else:
                                 break
                     starts.append({"y":y, "x":x, "level":level})
+
             for x in _chars_in_list(self.get_symbol_by_name("end_glyph"), ln):
                 if not self._has_continuation(x, y, program, "down") and not self._has_continuation(x, y, program, "up"):
                     ends.append({"y":y, "x":x})
 
-        ends_used = []
-        for s in starts:
-            start_matched = False
-            for e in [e for e in ends if e not in ends_used]:
-
-                if e["x"] <= s["x"] or e["y"] <= s["y"]:
-                    continue
-
-                # blank or beg of file above and not any horiz break in the middle
-                if (s["y"] == 0 or all(c == ' ' for c in program[s["y"]-1])) and \
-                    not any(all(c == ' ' for c in program[y]) for y in range(s["y"],e["y"])):
-
-                    # no col to the right or all blanks to the right and no vert break in the middle
-                    if (e["y"] == len(program)-1 or \
-                        (all(c == ' ' for c in [arr[e["x"]+1] if len(arr) > e["x"]+1 else ' ' for arr in program[s["y"]:e["y"]]]))) and \
-                        not any(all(c == ' ' for c in [arr[x] if len(arr) > x else ' ' for arr in program[s["y"]:e["y"]+1]]) for x in range(s["x"],e["x"])):
-
-                        glyph_locs.append({"start":s,"end":e,"level":s["level"]})
-                        del s["level"]
-                        ends_used.append(e)
-                        start_matched = True
-                        break
-            if not start_matched:
-                raise RivuletSyntaxError(f"Start glyph at {s['x']}, {s['y']} has no matching end")
-        if len(ends_used) != len(ends):
-            e = min([e for e in ends if e not in ends_used])
-            raise RivuletSyntaxError(f"End glyph at {e['x'], e['y']} has no corresponding Start")
-        return glyph_locs
+        # now we have a list of possible starts and ends, pass to match them
+        return self._match_starts_ends(starts, ends)
 
 
     def _load_primes(self, glyphs):
