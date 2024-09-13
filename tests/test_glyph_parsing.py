@@ -226,7 +226,7 @@ def test_correct_ref_cells():
 
     assert len(block["tokens"]) == 4
     assert block["tokens"][0]["ref_cell"] == [2, 0]
-    assert block["tokens"][1]["ref_cell"] == [2, 1]
+    assert block["tokens"][1]["ref_cell"] == [2, 2]
     assert block["tokens"][2]["ref_cell"] == [3, 0]
 
 def test_action_strands_connect_to_correct_data_strands():
@@ -245,8 +245,8 @@ def test_action_strands_connect_to_correct_data_strands():
 
 action_strand_add_replace = """
  1 ╵╵     ╭───╮ ╭─
- 2    ╴─╮╶╯╶╮ ╷╶╯
- 3  ╵╰──┘   │
+ 2    ╴─╮╶╯╶╮ │╶╯
+ 3  ╵╰──┘   │ ╷
  5  ╰───────╯
  7   ╭╴     ╭╴
 11   │      │
@@ -259,6 +259,16 @@ def test_action_strand_overwrite():
 
     assert block["tokens"][0]["action"]["command"] == "overwrite"
     assert block["tokens"][2]["action"]["command"] == "overwrite"
+
+def test_correct_lists_for_cells():
+    parser = Parser()
+    block = parser.parse_program(str(multiple_ref_assignments))[0]
+
+    assert len(block["tokens"]) == 4
+    assert block["tokens"][0]["list"] == 3
+    assert block["tokens"][1]["list"] == 2
+    assert block["tokens"][2]["list"] == 2
+    assert block["tokens"][3]["list"] == 2
 
 action_strand_with_list_interpretation = """
  1 ╵╵     ╭───╮
@@ -310,3 +320,39 @@ def test_action_strand_with_negative_action():
 
     assert block["tokens"][0]["action"]["command"] == "mod_assignment"
     assert block["tokens"][2]["action"]["command"] == "root_assignment"
+
+action_strand_to_higher_number_ref_cell = """
+ 1 ╵╵         ╭───╮ ╭─ ╶╮ ╭─╮  
+ 2 ╴─╮    ╴─╮╶╯╶╮ ╷╶╯╭──╯╶╯ ╰─╮ ╴─╮
+ 3   │ ╵ ╰──┘   │ ╭──┘  ╭╴   ─╯  ╶╯
+ 5   │ ╰────────╯ │     │         ╭╴
+ 7   ╰────────────╯  ───╯         │
+11       ╭╴     ╭╴                │
+13       │      │               │ │
+17       │ │    ╰─╮             ╰─╯
+19       ╰─╯│     │
+23          ╰─────╯                ╷
+"""
+def test_action_strand_to_higher_number_ref_cell():
+    parser = Parser()
+    block = parser.parse_program(str(action_strand_to_higher_number_ref_cell))[0]
+
+    assert block["tokens"][6]["ref_cell"] == [2, 4]
+
+action_strand_to_middle_number_ref_cell = """
+ 1 ╵╵         ╭───╮ ╭─ ╶╮ ╭─╮       ╭───
+ 2 ╴─╮    ╴─╮╶╯╶╮ ╷╶╯╭──╯╶╯ ╰─╮ ╴─╮╶╯
+ 3   │ ╵ ╰──┘   │ ╭──┘  ╭╴   ─╯  ╶╯
+ 5   │ ╰────────╯ │     │         ╭╴
+ 7   ╰────────────╯  ───╯         │
+11       ╭╴     ╭╴                │
+13       │      │               │ │
+17       │ │    ╰─╮             ╰─╯
+19       ╰─╯│     │
+23          ╰─────╯                     ╷
+"""
+def test_action_strand_to_middle_number_ref_cell():
+    parser = Parser()
+    block = parser.parse_program(str(action_strand_to_higher_number_ref_cell))[0]
+
+    assert block["tokens"][6]["ref_cell"] == [2, 4]

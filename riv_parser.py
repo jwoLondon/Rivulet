@@ -1,3 +1,4 @@
+import copy
 import json
 import math
 from riv_exceptions import InternalError, RivuletSyntaxError
@@ -249,6 +250,9 @@ class Parser:
     def _mark_end(self, start, curr, next_dir, prev, readings):
         "Determine what kind of strand we have and null out anything irrelevant to its reading"
 
+        if start["x"] == 31:
+            print("")
+
         if start["type"] == "question_marker":
             start['end_x'] = curr['x']
             start['end_y'] = curr['y']
@@ -268,18 +272,30 @@ class Parser:
                 start['subtype'] = "ref"
             if start['type'] == "action":
                 start["subtype"] = "list2list"
-                start["command"] = self.command_map[str(start["vert_value"])]
+                start["command"] = copy.deepcopy(self.command_map[str(start["vert_value"])])
+                if "list_name" in start['command']:
+                    start['command']['name'] = start['command']['list_name']
+                if "list_note" in start['command']:
+                    start['command']['note'] = start['command']['list_note']
         else:
             if start['type'] == "data":
                 start['subtype'] = "value"
                 start["vert_value"] = None
             if start['type'] == "action":
                 start["value"] = None
-                start["command"] = self.command_map[str(start["vert_value"])]
-                if next_dir == "right" or next_dir == "left":
+                start["command"] = copy.deepcopy(self.command_map[str(start["vert_value"])])
+                if next_dir in ("right", "left"):
                     start['subtype'] = "list"
+                    if "list_name" in start['command']:
+                        start['command']['name'] = start['command']['list_name']
+                    if "list_note" in start['command']:
+                        start['command']['note'] = start['command']['list_note']
                 else:
                     start['subtype'] = "element"
+                if "list_name" in start['command']:
+                    del start['command']['list_name']
+                if "list_note" in start['command']:
+                    del start['command']['list_note']
 
 
     def _lex_glyph(self, glyph):
@@ -308,6 +324,7 @@ class Parser:
             if n_read and len([t for t in n_read if OPPOSITE_DIR[dirtn] in t["dir"]])  != 0:
                 return True # has a continuation
         return False
+
 
     def _match_starts_ends(self, starts, ends):
         matches = []
@@ -351,7 +368,6 @@ class Parser:
             - the Start and End are not on the same line
           Determine level of glyph
         """
-
         starts = []
         ends = []
 
@@ -425,7 +441,7 @@ class Parser:
     def _parse_glyphs(self, glyphs):
         "Arrange Strands in order to be run and fill out with what they assign to, what is tested, etc"
 
-        for glyph in glyphs:
+        for g, glyph in enumerate(glyphs):
             order = 0
             count_per_list = {}
 
@@ -467,18 +483,20 @@ class Parser:
                 elif idx == 1:
                     token["subtype"] = "second"
                     if first_qm["end_x"] != token["x"] or first_qm["end_y"] != token["y"]:
-                        raise RivuletSyntaxError("A second question marker must begin just below where the first ends")
+                        raise RivuletSyntaxError(f"A second question marker must begin just below where the first ends [glyph {g}]")
                     first_qm["second"] = token
                 else:
-                    raise RivuletSyntaxError("Invalid number of question markers: only 0 or 2 are allowed in a glyph")
+                    raise RivuletSyntaxError(f"Invalid number of question markers: only 0 or 2 are allowed in a glyph [glyph {g}]")
 
             # Ref markers determine their reference cells
             for token in [t for t in sorted_tokens if t["subtype"] == "ref"]:
                 ref = [t for t in sorted_tokens if t["y"] == token["end_y"] and t["x"] < token["end_x"]]
                 if not ref:
+                    # no data cells have been declared for this list before where the ref points
                     token["ref_cell"] = [self.primes[token["end_y"]], 0]
                 else:
-                    token["ref_cell"] = [self.primes[token["end_y"]], min(t["assign_to_cell"] for t in ref) + 1]
+                    # the ref points to somewhere else in the list
+                    token["ref_cell"] = [self.primes[token["end_y"]], max(t["assign_to_cell"] for t in ref if t["x"] < token["end_x"]) + 1]
 
             # Action strands are added to their respective data strands
             # The top action strand for an x value goes to the top data strand for that x value
@@ -497,18 +515,10 @@ class Parser:
                     if t["type"] == "data" and t["x"] == actiontoken["x"]]):
                     if x_count == idx:
                         datanode["action"] = actiontoken
-
-                        # apply appropriate commnd for data token type
-                        if (datanode["subtype"] == "list" or actiontoken["subtype"] == "list" or actiontoken["subtype"] == "list2list") and "list_name" in datanode["action"]["command"]:
-                            datanode["action"]["command_note"] = actiontoken["command"]["list_note"]
-                            datanode["action"]["command"] = actiontoken["command"]["list_name"]
-                        else:
-                            datanode["action"]["command_note"] = actiontoken["command"]["note"]
-                            datanode["action"]["command"] = actiontoken["command"]["name"]
+                        datanode["action"]["command_note"] = actiontoken["command"]["note"]
+                        datanode["action"]["command"] = actiontoken["command"]["name"]
 
             glyph['tokens'] = sorted_tokens
-            print(glyph["tokens"])
-
 
 
     def parse_program(self, program):
@@ -531,8 +541,6 @@ class Parser:
 
         for glyph in glyphs:
             glyph["tokens"] = self._lex_glyph(glyph["glyph"])
-            # if len(glyph["glyph"])
-            print(glyph["tokens"])
 
         # re-arranges and decorates the tokens for each glyph in place
         self._parse_glyphs(glyphs)
