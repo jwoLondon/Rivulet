@@ -20,8 +20,8 @@
         {"name": "division_assignment",
         "note": "add/subtract, similar to the default addition_assignment"},
     "3":
-        {"name": "",
-        "note": ""},
+        {"list_name": "addition_assignment",
+        "list_note": "add to location, set to zero by default"},
     "-3":
         {"name": "mod_assignment",
         "note": "modulus against supplied argument"},
