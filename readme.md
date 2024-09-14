@@ -1,56 +1,77 @@
-
-![Python versions](https://img.shields.io/badge/Python-3.12-blue)
-![License](https://img.shields.io/badge/License-MIT-blue.svg)
-
 # Rivulet
 
-Rivulet is a language drawn in Unicode block-drawing characters. Each block of code is called a glyph. A glyph is drawn as a maze-like tangle of strands, each of which determines a command. Only the path of these strands are code; there are no keywords drawn from English or other natural languages.
+Rivulet is a programming language of flowing strands, written in semigraphic characters. A strand is not pictographic: its flow does not simulate computation, its movements are merely symbolic. There are four kinds of strands, each with their own grammatical rules and interpretation. Together, they form glyphs, blocks of code that execute together.
 
-As a glyph completes, the last strand to run is its conditional. If the conditional fails, the glyph undoes itself, rolling the program back to the state before the glyph was executed. In that way, it is the outcome that is tested, rather than the glyph's initial state. Every glyph of every program is executed. There is no way to conditionally run a block of code, only to revert that block after execution.
+[!WARNING] Status: The Rivulet parser mostly works and can spit out pseudo-code. Question strands are not ready.
+
+## Data Model
+
+In Rivulet, data is organized into lists of adjacent cells, filled with zeros by default. Commands are applied to either a single cell or an entire list. They take a second parameter, a constant or the value of another cell. 
+
+Commands can also be run list-to-list, applying the command to each successive cell, using the corresponding cells of the other. While they apply to cells with zeros as well, it does not go further then the last cell holding a value in either list.
+
+The first list, List 1, is sometimes used as the output stream. This is an interpreter setting, and can be written as numerical data or a Unicode string, with each value rounded to the nearest integer.
+
+## Control Flow
+
+Every Strand of every Glyph runs in a Rivulet program. If a glyph leads to an unwanted state, that glyph and the others of its block (all contiguous glyphs of the same level or higher), can be rolled back. The conditional rollback is the only form of branching in Rivulet. While loops end with a conditional rollback of their last iteration. Tests for rollbacks are that a single cell or entire list is zero.
 
 ## Syntax
 
 ### Glyphs
 
-Glyphs begin with ╵ and end with ╷
+Glyphs begin with ╵ in the upper left and end with ╷ at the bottom right. They must not have a vertically-oriented character directly above or below them, or they'll be confused for strands. Any text outside of glyph markers is ignored.
 
-Any large, empty area in the interior of a glyph is a syntax error. Glyphs should be dense.
+The level of the glyph is marked by how many ╵s appear at the beginning of the glyph. Levels tell where glyphs fall within larger blocks of code.
 
-### Strands
+### Lines of code
 
-Strands flow. Usually up to down, but not always. They turn using corners;  curved and sharp corners are interchangeable, but generally curved are preferred. There needs to be a certain proportion of sharp corners to add some visual interest. Lack of visual interest is a syntax error.
+The interpreter refers to code locations in terms of glyph numbers and then line numbers. Line numbers reset to 1 in each glyph. After line 1, they are numbered for each successive prime. These numbers are semantically meaningful for some strands.
 
-There are three types of strands, marked by how the strand begins.
+Some strand types have a vertical reading of line numbers. In their case, they always begin on line 1 and their neighbors are 2 on each side. They progress through primes, but always in distance from their starting point. Line numbers are every-other-line vertically so that the vertical lines are not packed too tightly.
 
-#### Values
+## Lexemes
 
-Values are all assigned as ints. Floats are constructed through division. Ints can be emitted as characters.
+Rivulet commands are written with these signs. Some re-use characters in a way that only context can disambiguate:
 
-#### Command
-Most commands are nilads, a few are monads.
+| Name      | Signs | Context | Interpretation
+| --- | --- | --- | --- |
+| Glyph Begin and End | ╵ ╷ | Not be adjacent another sign with a vertical reading | Marks the glyph, the smallest block of code in Rivulet 
+| Location | ╵ ╷ ╴╶ | Leaves a gap, to punctuate the end of a strand e.g. from left: ──╶ | A reference pointer to a cell
+| Continue | ─ │ | Continues the flows in the same direction e.g.  ──── | Depending on the strand type, it can add or subtract the line number of its horizontal or vertical line number
+| Corner |╯┘╰└ ╮┐╭┌ | Sharp or curved corners have the same meaning and can be used interchangeably | Turns direction of flow
+| Hook | ╯┘╰╴└╴ ╮┐╭╴┌╴| It's a character or characters that turn ninety degrees at the beginning of some strands. If it turns to the right or left, it is extended with a half-length line, the same character used to indicate Location, but flipped to extend the hook and not leave a gap.
+| Non-hook Begin Strand | ╷ above a │| Strands with no hook begin with the half-length character to extend it | Marks the beginning of a Question Strand
 
-#### Conditional Rollback
 
-### Other markers
+## Data Strands
+
+### Value Strands
+
+A value strand begins with a hook that points up or two the left.
+
+    1 ╵╰──╮╭──╯╶╮
+    2    ─┘└─   └─╮
+    3               
+    5              ╷
+
+### Reference Strands
+
+## Action Strands
+
+## Question Strands
+
+The top question marker begins 
+
+It has a lot of motion, but most of it does almost nothing.
+
+	top line begins directly under an END of a line:
+		applies to that cell
+
+	top line does not:
+		applies to the entire list that it starts from, not that it is under
+
+	top line left of where it begins: 
 
 
 
-
-
-Blocks of code in Rivulet are called glyphs. A glyph has multiple commands, each represented as a rivulent (or strand). They are drawn with Unicode block drawing characters.
-
-As a strand moves to the left or to the right, the value of that
-
-Indivudal commands are represented as rivulets (or strands) written with Unicode block drawing characters.
-
-Each line of text that a strand moves represents a value. The first line is 1, the rest are ascending prime numbers. Where the line begins marks 
-
-How it moves to the right or left on those lines adds or subtracts from it. The line where a strand begins represents the array it is affecting or being assign to. Each line it crosses represents a constant. The first line is 1, then they progress as ascending prime numbers.
-
-Rivulet is written in glyphs; each glyph is a block of code. Everything in the glyph is executed.
-
-Large gaps in the drawing of a single glyph are syntax errors that cause the glyph to fail.
-
-If there is a conditional in the glyph, it is executed last. A conditional does not branch in the conventional way, like if/then. Instead, the condition tests the outcome of that glyph, and if it fails, it will "undo" the glyph, returning the state of the program back to what it was before the glyph executed.
-
-In that way, conditionals test the outcome of that branch and rollback, rather than 

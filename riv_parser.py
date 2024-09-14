@@ -496,7 +496,7 @@ class Parser:
                     token["ref_cell"] = [self.primes[token["end_y"]], 0]
                 else:
                     # the ref points to somewhere else in the list
-                    token["ref_cell"] = [self.primes[token["end_y"]], max(t["assign_to_cell"] for t in ref if t["x"] < token["end_x"]) + 1]
+                    token["ref_cell"] = [self.primes[token["end_y"]], max(t["assign_to_cell"] for t in ref if t["x"] < token["end_x"] and "assign_to_cell" in t) + 1]
 
             # Action strands are added to their respective data strands
             # The top action strand for an x value goes to the top data strand for that x value
@@ -517,7 +517,10 @@ class Parser:
                         datanode["action"] = actiontoken
                         datanode["action"]["command_note"] = actiontoken["command"]["note"]
                         datanode["action"]["command"] = actiontoken["command"]["name"]
-
+            for token in sorted_tokens:
+                if token["subtype"] == "first":
+                    if "second" not in token:
+                        raise RivuletSyntaxError(f"Question marker without a second marker at [{token['x']}, {token['y']}] in glyph {g}")
             glyph['tokens'] = sorted_tokens
 
 

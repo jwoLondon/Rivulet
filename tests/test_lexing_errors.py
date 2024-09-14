@@ -55,3 +55,18 @@ def test_bad_start():
     assert "corresponding Start" in str(err.value)
     assert "5, 4" in str(err.value)
 
+orphan_question_strand = """
+╵╶╮ ╷ 
+  ╰─╯╷
+"""
+
+def test_orphan_question_strand():
+    "where a Glyph Start looks ambiguously like a ref marker"
+    lexr = Parser()
+    gl = copy.deepcopy(orphan_question_strand)
+    with pytest.raises(RivuletSyntaxError) as err:
+        lexr.parse_program(gl)
+
+    assert "without a second" in str(err.value)
+    assert "glyph 0" in str(err.value)
+    assert "4, 0" in str(err.value)

@@ -34,7 +34,7 @@ class Printer:
                 a(f"second.end_x: {token['second']['end_x']}", True)
                 a(f"second.end_y: {token['second']['end_y']}", True)
             if token["action"]:
-                a("action: {token['action']['command']}", True)
+                a(f"action: {token['action']['command']}", True)
         return retstr
 
 
@@ -63,6 +63,8 @@ class Printer:
                     a(f"list{token['list']}[{token['assign_to_cell']}] = ")
                 elif token["action"]["command"] == "append":
                     a(f"list{token['list']} append ")
+                elif token["action"]["command"] == "insert":
+                    a(f"list{token['list']} after cell {token['assign_to_cell']} insert ")
                 else:
                     a(f"list{token['list']}[{token['assign_to_cell']}] += ")
             elif token["subtype"] in ("list2list","list"):

@@ -353,6 +353,12 @@ action_strand_to_middle_number_ref_cell = """
 """
 def test_action_strand_to_middle_number_ref_cell():
     parser = Parser()
-    block = parser.parse_program(str(action_strand_to_higher_number_ref_cell))[0]
+    block = parser.parse_program(str(action_strand_to_middle_number_ref_cell))[0]
 
     assert block["tokens"][6]["ref_cell"] == [2, 4]
+
+def test_action_strand_second_ref_cell():
+    parser = Parser()
+    block = parser.parse_program(str(action_strand_to_middle_number_ref_cell))[0]
+
+    assert block["tokens"][1]["ref_cell"] == [2, 2]
