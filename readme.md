@@ -20,7 +20,6 @@ Here is a complete Fibonacci program:
 | :warning: WARNING          |
 |:---------------------------|
 | **Status: Version 0.1**. This is a mostly-working parser, producing pseudo-code output, meant for validation. List-to-list processing and question strands are incomplete and the parser does not always return clear feedback. |
-|-------------|
 
 ## Design Philosophy
 
@@ -149,32 +148,42 @@ Where a data strand's value is determined by movements to the left and right, ac
 
 EXAMPLE: This command that raises the values of list 1, cells 0 and 1, each to their fourth power:
 
-    1 ╵╰─╮ ╰─╮
-    2    │   │ 
-    3  ╭╴└─╭╴└─
-    5  │   │ 
-	7  │   │
-   11  ╰─╮ ╰─╮
-   13  	 │   │ ╷
+     1 ╵╰─╮ ╰─╮
+     2    │   │ 
+     3  ╭╴└─╭╴└─
+     5  │   │ 
+	 7  │   │
+    11  ╰─╮ ╰─╮
+    13    │   │ ╷
+        1 2 1 2
 
-The action strands each have a value of 4, which corresponds to exponentiation_assignment, under data strands of value 4. Here is the command list, showing which values assign to what command:
+The action strands each have a value of 4, which corresponds to exponentiation_assignment, under data strands of value 4. Here is the (INCOMPLETE) command list, showing which values assign to what command:
 
 | Value  | Command | Interpretation |
 | --- | --- | --- |
 | default | addition_assignment | add to location, set to zero by default |
 | 0 | overwrite| assignment, overwriting existing value |
 | 1 | insert | inserts value after indicated cell |
-| -1 | subtraction_assignment | |
-| 2 | multiplication_assignment | |
-| -2 | division_assignment | |
+| -1 | subtraction assignment | |
+| 2 | multiplication assignment | |
+| -2 | division assignment | |
 | 3 | no-op | TBD; currently only has value when assigned to list |
-| -3 | mod_assignment | modulus of cell value against supplied argument |
-| 4 | exponentiation_assignment | raise to power of supplied argument" |
-| -4 | root_assignment | take root at power of supplied argument |
+| -3 | mod assignment | modulus of cell value against supplied argument |
+| 4 | exponentiation assignment | raise to power of supplied argument" |
+| -4 | root assignment | take root at power of supplied argument |
+
 
 :WARNING: It is every-other-line that increments between the primes, as the vertical length for a block-drawing char is longer than their horizontal length. This sounds confusing but is usually clear visually.
 
-The list above is only partial for the moment.
+Here is an example of two action strands and their numbering:
+
+      ╭─╮ ╭╴  ╭╴ 
+      │ │ │   │ │
+    │ │ ╰─╯   │ │
+    ╰─╯       ╰─╯
+    5 3 2 1   1 2
+
+The first strand has a value of: (1 - 2 + 2*3 - 5) = 2, multiplication assignment. The second strand has a value of (2 * 1) - (2 * 2) = -2, division assignment.
 
 ### List indicator
 
