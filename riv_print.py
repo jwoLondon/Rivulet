@@ -3,6 +3,8 @@
 class Printer:
     "Summarize strands or translate to pseudo-code"
 
+    #NOTE: At the moment, this is also doing some of the parsing work, in producing pseudo-code that the parser should be responsible for
+
     def print_glyph_summary(self, glyph):
         "Summarize the glyph with descriptions of each strand"
 
@@ -28,7 +30,7 @@ class Printer:
                 a(f"ref_cell: {token['ref_cell']}", True)
             if token["type"] == "question_marker":
                 a(f"end_x: {token['end_x']}", True)
-                a(f"end_x: {token['end_y']}", True)
+                a(f"end_y: {token['end_y']}", True)
                 a(f"second.start_x: {token['second']['x']}", True)
                 a(f"second.start_y: {token['second']['y']}", True)
                 a(f"second.end_x: {token['second']['end_x']}", True)
@@ -53,9 +55,11 @@ class Printer:
         for token in glyph["tokens"]:
             if token["type"] == "question_marker":
                 a("question_marker:",True)
-                a(f"end_x: [{token['end_x']},{token['end_y']}]",True)
-                a(f"second.start: [{token['second']['x']},{token['second']['y']}]",True)
-                a(f"second.end: [{token['second']['end_x']},{token['second']['end_y']}]",True)
+                a(f"end pos: {token["end_pos"]}",True)
+                if(token['end_x'] < token['x']):
+                    a("ends left",True)
+                else:
+                    a("ends right",True)
             elif token["action"] and "command" in token["action"]:
                 if token["action"]["command"] == "subtraction_assignment":
                     a(f"list{token['list']}[{token['assign_to_cell']}] -= ")
@@ -81,6 +85,15 @@ class Printer:
             # if token["subtype"] == "value":
             #     a(f"{token['value']}")
         return retstr
+    
+    def print_glyph(self, glyph):
+        "Print the literal glyph"
+        retstr = ""
+        for y in glyph:
+            for x in y:
+                retstr += x
+            retstr += "\n"
+        return retstr
 
     def print_program(self, parse_tree, pseudo=False):
         "Summarize the program"
@@ -89,6 +102,7 @@ class Printer:
             retstr += f"\nglyph {idx}\n"
 
             if pseudo:
+                retstr += self.print_glyph(glyph["glyph"])
                 retstr += self.print_glyph_pseudo(glyph)
             else:
                 retstr += self.print_glyph_summary(glyph)

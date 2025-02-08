@@ -166,6 +166,11 @@ class Parser:
         # We already know the direction prev is pointing, so we can look for the next character in that direction and mark as curr.
         curr = self._get_neighbor(prev["x"], prev["y"], prev["dir"], glyph, include_coords=True)
 
+        if "cells" not in start:
+            start["cells"] = []
+
+        start["cells"].append(curr)
+
         # next_dir is the direction curr continues onto its following character
         next_dir = False
 
@@ -485,10 +490,28 @@ class Parser:
                     if first_qm["end_x"] != token["x"] or first_qm["end_y"] != token["y"]:
                         raise RivuletSyntaxError(f"A second question marker must begin just below where the first ends [glyph {g}]")
                     first_qm["second"] = token
+
+                    last_marker_type = [x for x in self.lexicon if token["cells"][-1]["symbol"] in x["symbol"]]
+                    if len(last_marker_type) == 0:
+                        raise RivuletSyntaxError(f"Could not determine end of second question marker in a set")
+                    last_marker_type = last_marker_type[0]
+                    first_qm["end_pos"] = last_marker_type["name"]
                 else:
                     raise RivuletSyntaxError(f"Invalid number of question markers: only 0 or 2 are allowed in a glyph [glyph {g}]")
 
+                # get ref cell (or list) for the question marker
+                ref = [t for t in sorted_tokens if t["y"] == token["y"] and t["x"] < token["x"]]
+
+                if not ref:
+                    # no data cells have been declared for this list before where the ref points
+                    token["ref_cell"] = [self.primes[token["y"]], 0]
+                else:
+                    # the ref points to somewhere else in the list
+                    token["ref_cell"] = [self.primes[token["y"]], max(t["assign_to_cell"] for t in ref if t["x"] < token["x"] and "assign_to_cell" in t) + 1]
+
+
             # Ref markers determine their reference cells
+            # Also do for question marker in case needed
             for token in [t for t in sorted_tokens if t["subtype"] == "ref"]:
                 ref = [t for t in sorted_tokens if t["y"] == token["end_y"] and t["x"] < token["end_x"]]
                 if not ref:

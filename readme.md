@@ -162,7 +162,7 @@ The action strands each have a value of 4, which corresponds to exponentiation_a
 | Value  | Command | Interpretation |
 | --- | --- | --- |
 | default | addition_assignment | add to location, set to zero by default |
-| 0 | overwrite| assignment, overwriting existing value |
+| 0 | overwrite | assignment, overwriting existing value |
 | 1 | insert | inserts value after indicated cell |
 | -1 | subtraction assignment | |
 | 2 | multiplication assignment | |
@@ -192,6 +192,8 @@ Action strands can also mark that a command applies not to a single cell (as is 
 ### List 2 List
 
 If an action strand ends with a location marker (the tiny gap), it shows that the action should be applied for every cell of the referenced list to every cell of the assigned list. This is only syntactically valid when the data strand also ends with a location marker (is a reference strand).
+
+Every cell with a number in the second list is applied to the cells in the first.
 
 ## Question Strand Sets
 

@@ -24,10 +24,21 @@ class Interpreter:
 
         parse_tree = parser.parse_program(program)
 
+        # For now, we print to verify the parse tree
         printer = Printer()
         printer.print_program(parse_tree, pseudo=True)
 
         return ""
+    
+    def interpret_program(self, program, verbose):
+        "Interpret a Rivulet program passed by text"
+        self.verbose = verbose
+
+        parser = Parser()
+
+        parse_tree = parser.parse_program(program)
+
+        return parse_tree
 
 
 if __name__ == "__main__":
