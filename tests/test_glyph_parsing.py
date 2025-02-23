@@ -362,3 +362,33 @@ def test_action_strand_second_ref_cell():
     block = parser.parse_program(str(action_strand_to_middle_number_ref_cell))[0]
 
     assert block["tokens"][1]["ref_cell"] == [2, 2]
+
+question_strand_glyph = '''╵╵ ──╮  ╭─╮╭───╮
+   ╰─╯╰─╯ │╰──╮╷
+   ╰─╮   ─╯ ╷╶╯
+  ╭──╯  ╭─╮ │
+  ╰─╭─╮ ╷ │ │
+    │ │ │ │ │ 
+  ──╯ ╰─╯ ╰─╯  ╷
+'''
+def test_question_strand_apply_to_list():
+    parser = Parser()
+    block = parser.parse_program(str(question_strand_glyph))[0]
+    print(block)
+    assert block["tokens"][4]["end_pos"] == "horizontal"
+    assert block["tokens"][4]["applies_to"] == "list"
+
+question_strand_glyph2 = '''╵╵ ──╮  ╭─╮╭───╮
+   ╰─╯╰─╯ │╰──╮╷
+   ╰─╮   ─╯ ╷╶╯
+  ╭──╯  ╭─╮ │
+  ╰─╭─╮ ╷ │ │
+    │ │ │ │ │ 
+    │ ╰─╯ ╰─╯  ╷
+'''
+def test_question_strand_apply_to_list():
+    parser = Parser()
+    block = parser.parse_program(str(question_strand_glyph2))[0]
+    print(block)
+    assert block["tokens"][4]["end_pos"] == "vertical"
+    assert block["tokens"][4]["applies_to"] == "cell"

@@ -1,9 +1,8 @@
 "Summarize strands or translate to pseudo-code"
 
-class Printer:
+class PythonTranspiler:
     "Summarize strands or translate to pseudo-code"
-
-    #NOTE: At the moment, this is also doing some of the parsing work, in producing pseudo-code that the parser should be responsible for
+    #FIXME: This should have a base class for Printer/Transpiler to handle pseudo-code and desciption
 
     def print_glyph_summary(self, glyph):
         "Summarize the glyph with descriptions of each strand"
@@ -29,12 +28,17 @@ class Printer:
             if token["subtype"] == "ref":
                 a(f"ref_cell: {token['ref_cell']}", True)
             if token["type"] == "question_marker":
-                a(f"end_x: {token['end_x']}", True)
-                a(f"end_y: {token['end_y']}", True)
-                a(f"second.start_x: {token['second']['x']}", True)
-                a(f"second.start_y: {token['second']['y']}", True)
-                a(f"second.end_x: {token['second']['end_x']}", True)
-                a(f"second.end_y: {token['second']['end_y']}", True)
+                a(f"test: {token['test']}", True)
+                # a(f"end_x: {token['end_x']}", True)
+                # a(f"end_y: {token['end_y']}", True)
+                # a(f"second.start_x: {token['second']['x']}", True)
+                # a(f"second.start_y: {token['second']['y']}", True)
+                # a(f"second.end_x: {token['second']['end_x']}", True)
+                # a(f"second.end_y: {token['second']['end_y']}", True)
+                if token["applies_to"] == "list":
+                    a(f"ref_list: {token['ref_list']}")
+                else:
+                    a(f"ref_cell: {token['ref_cell']}")
             if token["action"]:
                 a(f"action: {token['action']['command']}", True)
         return retstr
@@ -54,12 +58,14 @@ class Printer:
         a(f"level: {glyph["level"]}",True)
         for token in glyph["tokens"]:
             if token["type"] == "question_marker":
-                a("question_marker:",True)
-                a(f"end pos: {token["end_pos"]}",True)
-                if(token['end_x'] < token['x']):
-                    a("ends left",True)
+                if token["test"] == "less_than_zero":
+                    test = "<= 0"
                 else:
-                    a("ends right",True)
+                    test = "???"
+                if token["applies_to"] == "list":
+                    a(f"if (list{token['ref_list']}) has x: x {test}: roll back")
+                else:
+                    a(f"if {token['ref_cell']} {test}: roll back")
             elif token["action"] and "command" in token["action"]:
                 if token["action"]["command"] == "subtraction_assignment":
                     a(f"list{token['list']}[{token['assign_to_cell']}] -= ")
@@ -97,6 +103,7 @@ class Printer:
 
     def print_program(self, parse_tree, pseudo=False):
         "Summarize the program"
+        #FIXME: Move pseudo to another method in base class (to be created)
         retstr = ""
         for idx, glyph in enumerate(parse_tree):
             retstr += f"\nglyph {idx}\n"

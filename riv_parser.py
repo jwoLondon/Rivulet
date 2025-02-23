@@ -485,6 +485,13 @@ class Parser:
                     order += 1
                     sorted_tokens.append(token)
                     first_qm = token
+                    if token["x"] < token["end_x"]:
+                        token["position"] = "right"
+                        token["test"] = "???"
+                        # FIXME: What is the meaning of a rightward movement?
+                    else:
+                        token["position"] = "left"
+                        token["test"] = "less_than_zero"
                 elif idx == 1:
                     token["subtype"] = "second"
                     if first_qm["end_x"] != token["x"] or first_qm["end_y"] != token["y"]:
@@ -493,9 +500,15 @@ class Parser:
 
                     last_marker_type = [x for x in self.lexicon if token["cells"][-1]["symbol"] in x["symbol"]]
                     if len(last_marker_type) == 0:
-                        raise RivuletSyntaxError(f"Could not determine end of second question marker in a set")
+                        raise RivuletSyntaxError("Could not determine end of second question marker in a set")
                     last_marker_type = last_marker_type[0]
                     first_qm["end_pos"] = last_marker_type["name"]
+                    if first_qm["end_pos"] == "horizontal":
+                        first_qm["applies_to"] = "list"
+                        first_qm["ref_list"] = 3
+                        del first_qm["ref_cell"]
+                    else:
+                        first_qm["applies_to"] = "cell"
                 else:
                     raise RivuletSyntaxError(f"Invalid number of question markers: only 0 or 2 are allowed in a glyph [glyph {g}]")
 
@@ -508,7 +521,6 @@ class Parser:
                 else:
                     # the ref points to somewhere else in the list
                     token["ref_cell"] = [self.primes[token["y"]], max(t["assign_to_cell"] for t in ref if t["x"] < token["x"] and "assign_to_cell" in t) + 1]
-
 
             # Ref markers determine their reference cells
             # Also do for question marker in case needed

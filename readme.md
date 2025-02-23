@@ -197,7 +197,21 @@ Every cell with a number in the second list is applied to the cells in the first
 
 ## Question Strand Sets
 
-Question Strands appear in pairs. They refer, not to the cell whose hook appears directly above them, but where that data strand ends. If they do not end under any data strand ending, they apply to the list on whose line they begin.
+Question Strands appear in pairs, one above the other.
 
-Question strands move back and forth through the glyph, often filling in blank spaces. They are read by only a few things: whether the top strand ends to the left or right of where it began, whether the bottom strand appears to the left or right of where it began, and whether its last character is left/right or up/down.
+Together, they pose a question about the state of the data. Should it be found wanting, the glyph and its siblings (those at the same level) are rolled back. If in a loop, only the most recent iteration is undone. This is the only way to exit a loop.
 
+The top question strand begins with a vertical line. It ends either to the left or right of where it began (above or below has no semantic meaning).
+
+The bottom question strand begins directly above its partner. It too ends either to the left or right of where it began, and it ends with a vertical piece (indicating the question applies only to a single cell) or a horizontal piece (indicating the entire list is to be questioned, the answer an accumulation of its answer).
+
+Question strands, read only by their beginning vs end, can move back and forth through the glyph, filling in blank spaces. They are often decorative, gap-filling lines.
+
+| Top Line | Bottom Line | Roll Back If
+| --- | --- | --- |
+| Left | Left | Less than or equal to Zero (any)
+| Left | Right | ??? (any)
+| Right | Left | Less than or equal to Zero (all)
+| Right | Right | ??? (all)
+
+(any) vs (all) are equivalent if testing only a single cell
