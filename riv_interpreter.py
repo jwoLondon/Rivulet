@@ -1,5 +1,6 @@
 "Interpreter for the Rivulet esolang"
 from argparse import ArgumentParser
+from riv_color_sets import ColorSets
 from riv_parser import Parser
 from riv_python_transpiler import PythonTranspiler
 from riv_svg_generator import SvgGenerator
@@ -13,7 +14,7 @@ class Interpreter:
         self.outfile = None
         self.verbose = False
 
-    def interpret_file(self, progfile, outfile, verbose, svg):
+    def interpret_file(self, progfile, outfile, verbose, svg, colorset):
         "Interpret a Rivulet program file"
         self.outfile = outfile
         self.verbose = verbose
@@ -26,7 +27,7 @@ class Interpreter:
         parse_tree = parser.parse_program(program)
 
         if svg is not None:
-            svg = SvgGenerator()
+            svg = SvgGenerator(ColorSets[colorset])
             svg.generate(parse_tree)
 
         return self.__interpret(parse_tree)
@@ -58,12 +59,13 @@ if __name__ == "__main__":
                         help='where to write output from the program')
     arg_parser.add_argument('-v', dest='verbose', action='store_true',
                         default=False, help='verbose logging')
-    arg_parser.add_argument('--svg', dest='svg', default=None,
+    arg_parser.add_argument('--svg', dest='svg', action='store_true', default=False,
                         help='save to svg')
+    arg_parser.add_argument('--colorset', dest='color_set', default="default", help="color scheme for svg")
     args = arg_parser.parse_args()
 
     intr = Interpreter()
-    result = intr.interpret_file(args.progfile, args.outfile, args.verbose, args.svg)
+    result = intr.interpret_file(args.progfile, args.outfile, args.verbose, args.svg, args.color_set)
 
     if not args.outfile or args.verbose:
         print(result)

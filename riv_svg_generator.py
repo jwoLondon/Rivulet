@@ -7,18 +7,31 @@ import svg
 class SvgGenerator:
     "Tool to create svg files from Rivulet source code"
 
-    BgPattern = Enum('BackPattern', [('blank', 1), ('lines', 1), ('dots', 2)])
+    BgPattern = Enum('BackPattern', [('blank', 1), ('lines', 2), ('dots', 3)])
 
     class Parameters:
         "Parameter Set for SvgGenerator"
-        def __init__(self):
-            self.cell_width = 80
-            self.cell_height = 100
-            self.bg_pattern = SvgGenerator.BgPattern['lines']
-            self.bg_color = "#ffffff"
-            # self.bg_color = "#e0d0f4"
-            self.color_set = ["#000000","#5f5ff6","#61d43f","#0000f5","#560c5c","#275e83","#666666"]
-            self.stroke_width = 20
+        cell_width = 80
+        cell_height = 100
+        bg_pattern = None
+        bg_color = "#ffffff"
+        # self.bg_color = "#e0d0f4"
+        color_set = ["#000000"]
+        stroke_width = 20
+
+        glyph_marker = "#999999"
+
+        line_color = "#000000"
+        line_opacity = 0.35
+
+        dot_color = "#000000"
+        dot_opacity = 0.1
+
+
+        def __init__(self, dictionary):
+            for k, v in dictionary.items():
+                setattr(self, k, v)
+
 
     def __init__(self, parameters=None):
         self.p = parameters
@@ -37,6 +50,8 @@ class SvgGenerator:
 
         elements = []
 
+        lines_skipped = [] # used for drawing lines
+
         elements.append(svg.Rect(x=0, y=0, width="100%", height="100%", fill=self.p.bg_color))
 
         for g, glyph in enumerate(parse_tree):
@@ -52,7 +67,7 @@ class SvgGenerator:
                     svg.Path(
                         d=d,
                         fill="none",
-                        stroke="#999999",
+                        stroke=self.p.glyph_marker,
                         stroke_width=self.p.stroke_width,
                     )
                 )
@@ -90,16 +105,32 @@ class SvgGenerator:
                     )
                 )
 
+            # add closing glyph marker
+            d = []
+            d.append(svg.M(max(widths) * self.p.cell_width, (y_off + len(glyph["glyph"]) - 1) * self.p.cell_height))
+            self._add_start_spacing(d, .5, .5)
+            d.append(svg.v(self.p.cell_height/2))
+            elements.append(
+                svg.Path(
+                    d=d,
+                    fill="none",
+                    stroke=self.p.glyph_marker,
+                    stroke_width=self.p.stroke_width,
+                )
+            )                
+
             y_off += (len(glyph["glyph"]) + 2)
+            lines_skipped.append(y_off - 1)
 
         if self.p.bg_pattern == SvgGenerator.BgPattern['dots']:
             for y in range(0, y_off):
                 for x in range(0, max(glyph_widths) + 4):
-                    elements.append(svg.Circle(r=self.p.stroke_width/2, cx=(x + 0.5) * self.p.cell_width, cy=y * self.p.cell_height, fill="#000000", fill_opacity=0.1))
+                    elements.append(svg.Circle(r=self.p.stroke_width/2, cx=(x + 0.5) * self.p.cell_width, cy=y * self.p.cell_height, fill=self.p.dot_color, fill_opacity=self.p.dot_opacity))
 
         elif self.p.bg_pattern == SvgGenerator.BgPattern['lines']:
             for y in range(0, y_off):
-                elements.append(svg.Line(x1=0, y1=self.p.cell_height * y, x2=(max(glyph_widths) + 4) * self.p.cell_width, y2=self.p.cell_height * y, stroke="#000000", stroke_opacity=0.35, stroke_width=1))
+                if y not in lines_skipped:
+                    elements.append(svg.Line(x1=0, y1=self.p.cell_height * y, x2=(max(glyph_widths) + 4) * self.p.cell_width, y2=self.p.cell_height * y, stroke=self.p.line_color, stroke_opacity=self.p.line_opacity, stroke_width=1))
 
         canvas = svg.SVG(
             width=(max(glyph_widths) + 4) * self.p.cell_width,
