@@ -8,6 +8,7 @@ class SvgGenerator:
     "Tool to create svg files from Rivulet source code"
 
     BgPattern = Enum('BackPattern', [('blank', 1), ('lines', 2), ('dots', 3)])
+    Linecap = Enum('Linecap', [('square', 0), ('butt', 1), ('round', 2)])
 
     class Parameters:
         "Parameter Set for SvgGenerator"
@@ -27,10 +28,15 @@ class SvgGenerator:
         dot_color = "#000000"
         dot_opacity = 0.1
 
+        stroke_linecap = None
+
 
         def __init__(self, dictionary):
             for k, v in dictionary.items():
                 setattr(self, k, v)
+
+            if self.stroke_linecap == None:
+                self.stroke_linecap = SvgGenerator.Linecap('square')
 
 
     def __init__(self, parameters=None):
@@ -69,6 +75,7 @@ class SvgGenerator:
                         fill="none",
                         stroke=self.p.glyph_marker,
                         stroke_width=self.p.stroke_width,
+                        stroke_linecap=self.p.stroke_linecap
                     )
                 )
                 x_off += 1
@@ -102,6 +109,7 @@ class SvgGenerator:
                         fill="none",
                         stroke=self.p.color_set[idx % len(self.p.color_set)],
                         stroke_width=self.p.stroke_width,
+                        stroke_linecap=self.p.stroke_linecap
                     )
                 )
 
@@ -116,6 +124,7 @@ class SvgGenerator:
                     fill="none",
                     stroke=self.p.glyph_marker,
                     stroke_width=self.p.stroke_width,
+                    stroke_linecap=self.p.stroke_linecap
                 )
             )                
 
