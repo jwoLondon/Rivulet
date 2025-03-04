@@ -29,12 +29,11 @@ class PythonTranspiler:
                 a(f"ref_cell: {token['ref_cell']}", True)
             if token["type"] == "question_marker":
                 a(f"test: {token['test']}", True)
-                # a(f"end_x: {token['end_x']}", True)
-                # a(f"end_y: {token['end_y']}", True)
-                # a(f"second.start_x: {token['second']['x']}", True)
-                # a(f"second.start_y: {token['second']['y']}", True)
-                # a(f"second.end_x: {token['second']['end_x']}", True)
-                # a(f"second.end_y: {token['second']['end_y']}", True)
+                
+                # if "end_position" in token:
+                #     a(f"end_position: {token['end_position']}", True)
+                # a(f"applies_to: {token['applies_to']}", True)
+
                 if token["applies_to"] == "list":
                     a(f"ref_list: {token['ref_list']}")
                 else:

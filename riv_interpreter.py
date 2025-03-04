@@ -1,6 +1,6 @@
 "Interpreter for the Rivulet esolang"
 from argparse import ArgumentParser
-from riv_color_sets import ColorSets
+from riv_themes import Themes
 from riv_parser import Parser
 from riv_python_transpiler import PythonTranspiler
 from riv_svg_generator import SvgGenerator
@@ -26,9 +26,13 @@ class Interpreter:
 
         parse_tree = parser.parse_program(program)
 
-        if svg is not None:
-            svg = SvgGenerator(ColorSets[colorset])
+        if svg:
+            svg = SvgGenerator(Themes[colorset])
             svg.generate(parse_tree)
+
+        if self.verbose:
+            printer = PythonTranspiler()
+            printer.print_program(parse_tree, pseudo=False)
 
         return self.__interpret(parse_tree)
     
@@ -40,12 +44,14 @@ class Interpreter:
 
         parse_tree = parser.parse_program(program)
 
+        if self.verbose:
+            printer = PythonTranspiler()
+            printer.print_program(parse_tree, pseudo=True)
+
         return self.__interpret(parse_tree)
-    
+
     def __interpret(self, parse_tree):
-        # For now, we print to verify the parse tree
-        printer = PythonTranspiler()
-        printer.print_program(parse_tree, pseudo=True)
+        pass
 
 
 if __name__ == "__main__":
