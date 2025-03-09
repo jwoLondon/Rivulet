@@ -286,6 +286,7 @@ def test_action_strand_with_list_interpretation():
     assert block["tokens"][0]["action"]["command"] == "insert"
     assert block["tokens"][2]["action"]["command"] == "append"
     assert block["tokens"][2]["action"]["subtype"] == "list"
+    assert block["tokens"][2]["subtype"] == "ref"
 
 
 action_strand_with_list2list_interpretation = """
@@ -304,6 +305,25 @@ def test_action_strand_with_list2list_interpretation():
     assert block["tokens"][0]["action"]["command"] == "insert"
     assert block["tokens"][2]["action"]["command"] == "append"
     assert block["tokens"][2]["action"]["subtype"] == "list2list"
+    assert block["tokens"][2]["action"]["applies_to"] == "list"
+
+action_strand_with_list2list_interpretation_nonlist = """
+ 1 ╵╵     ╭───╮
+ 2    ╴─╮╶╯╶╮ ╷
+ 3  │╰──┘   │
+ 5  ╰───────╯
+ 7   ╭╴     ╭╴
+11   │      │
+13    ──────╯ ╷
+"""
+def test_action_strand_with_list_val_interpretation():
+    parser = Parser()
+    block = parser.parse_program(str(action_strand_with_list2list_interpretation_nonlist))[0]
+
+    assert block["tokens"][0]["action"]["command"] == "insert"
+    assert block["tokens"][2]["action"]["command"] == "append"
+    assert block["tokens"][2]["action"]["subtype"] == "list"
+    assert block["tokens"][2]["subtype"] == "value"
 
 action_strand_with_negative_action = """
  1 ╵╵     ╭───╮

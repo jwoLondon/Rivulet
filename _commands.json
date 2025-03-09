@@ -1,15 +1,19 @@
 {
-    "default":
-        {"name": "addition_assignment",
-        "note": "add to location, set to zero by default"},
-    "0":
-        {"name": "overwrite",
-        "note": "assignment, overwriting existing value (rather than adding)"},
-    "1":
-        {"name": "insert",
+    "default": {
+        "name": "addition_assignment",
+        "note": "add to location, set to zero by default"
+    },
+    "0": {
+        "name": "overwrite",
+        "note": "assignment, overwriting existing value"
+    },
+    "1": {
+        "name": "insert",
         "note": "inserts value after indicated cell (applied immediately)",
-        "list_name": "append",
-        "list_note": "appends value to list"},
+        "list": {
+            "name": "append",
+            "note": "appends value to list"}    
+    },
     "-1": 
         {"name": "subtraction_assignment",
         "note": "add/subtract, similar to the default addition_assignment"},
@@ -19,14 +23,17 @@
     "-2": 
         {"name": "division_assignment",
         "note": "add/subtract, similar to the default addition_assignment"},
-    "3":
-        {"list_name": "addition_assignment",
-        "list_note": "add to location, set to zero by default"},
+    "3": {
+        "list": {
+            "name": "addition_assignment",
+            "note": "add to location, set to zero by default"
+        }
+    },
     "-3":
         {"name": "mod_assignment",
         "note": "modulus against supplied argument"},
     "4":
-        {"name": "exponentiation_assignment",
+        {"name": "exponent_assignment",
         "note": "raise to power of supplied argument"},
     "-4": 
         {"name": "root_assignment",

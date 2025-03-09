@@ -19,7 +19,7 @@ Here is a complete Fibonacci program:
 
 | :warning: WARNING          |
 |:---------------------------|
-| **Status: Version 0.1**. This is a mostly-working parser, producing pseudo-code output, meant for validation. List-to-list processing and question strands are incomplete and the parser does not always return clear feedback. |
+| **Status: Version 0.3**. This is a mostly-working parser, a somewhat working interpreter, and a tool to generate svg files of source code. |
 
 ## Design Philosophy
 
@@ -207,11 +207,13 @@ The bottom question strand begins directly above its partner. It too ends either
 
 Question strands, read only by their beginning vs end, can move back and forth through the glyph, filling in blank spaces. They are often decorative, gap-filling lines.
 
-| Top Line | Bottom Line | Roll Back If
-| --- | --- | --- |
-| Left | Left | Less than or equal to Zero (any)
-| Left | Right | ??? (any)
-| Right | Left | Less than or equal to Zero (all)
-| Right | Right | ??? (all)
+Question lines always fail if an item is less than or equal to zero.
+
+| Top Line | Bottom Line | Use | Checks
+| --- | --- | --- | --- |
+| Left | Left | If | Any item (for list)
+| Left | Right | While | All items
+| Right | Left | If | Any
+| Right | Right | If | All
 
 (any) vs (all) are equivalent if testing only a single cell

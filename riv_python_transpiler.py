@@ -4,8 +4,8 @@ class PythonTranspiler:
     "Summarize strands or translate to pseudo-code"
     #FIXME: This should have a base class for Printer/Transpiler to handle pseudo-code and desciption
 
-    def print_glyph_summary(self, glyph):
-        "Summarize the glyph with descriptions of each strand"
+    def print_glyph_debug(self, glyph):
+        "Prints meaning of each strand for debugging"
 
         retstr = ""
         def a(txt, endline=False):
@@ -43,7 +43,7 @@ class PythonTranspiler:
         return retstr
 
 
-    def print_glyph_pseudo(self, glyph):
+    def glyph_pseudo(self, glyph):
         "Return pseudo-code for the glyph"
 
         retstr = ""
@@ -91,7 +91,7 @@ class PythonTranspiler:
             #     a(f"{token['value']}")
         return retstr
     
-    def print_glyph(self, glyph):
+    def glyph_drawn(self, glyph):
         "Print the literal glyph"
         retstr = ""
         for y in glyph:
@@ -107,9 +107,10 @@ class PythonTranspiler:
         for idx, glyph in enumerate(parse_tree):
             retstr += f"\nglyph {idx}\n"
 
-            if pseudo:
-                retstr += self.print_glyph(glyph["glyph"])
-                retstr += self.print_glyph_pseudo(glyph)
-            else:
-                retstr += self.print_glyph_summary(glyph)
+        retstr += self.glyph_drawn(glyph["glyph"])
+        retstr += "GLYPH_SUMMARY\n"
+        retstr += self.glyph_pseudo(glyph)
+        # retstr += "\nSTRAND SUMMARY\n"
+        # retstr += self.print_glyph_debug(glyph)
+
         print(retstr)

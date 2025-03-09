@@ -54,7 +54,7 @@ class SvgGenerator:
             outfile = "out/output.svg" # this should increment probly
 
         x_off = 0 # currently assumes vertical layout
-        y_off = 1
+        y_off = self.p.cell_height
 
         glyph_widths = []
 
@@ -64,10 +64,19 @@ class SvgGenerator:
 
         elements.append(svg.Rect(x=0, y=0, width="100%", height="100%", fill=self.p.bg_color))
 
+        widest_glyph = len(max(parse_tree, key = lambda x: len(x["glyph"][0]))["glyph"][0])
+
         for g, glyph in enumerate(parse_tree):
             prev_dir = None
             widths = []
             x_off = 0
+
+            glyph_width = len(x["glyph"][0])
+
+            if x_off + glyph_width > 30:
+                x_off = 0
+                y_off += 1
+
             for i in range(0, glyph["level"]):
                 d = []
                 d.append(svg.M(x_off * self.p.cell_width, y_off * self.p.cell_height))

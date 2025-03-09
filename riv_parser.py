@@ -156,7 +156,9 @@ class Parser:
 
 
     def _interpret_strand(self, glyph, prev, start):
-        """Recursively follow the data strand to determine build out its value and determine its subtype (value vs ref if data strand etc). Parameters:
+        """Recursively follow the data strand to determine build out its value and determine its subtype (value vs ref if data strand etc). 
+        
+        Parameters:
             glyph: the glyph matrix
             prev: the current step's data (it will advance to the next step)
             start: the start of the strand
@@ -269,6 +271,8 @@ class Parser:
         elif "loc_marker" in readings and \
             OPPOSITE_DIR[prev['dir']] in readings["loc_marker"]['dir']:
 
+            # REF or LIST2LIST:
+
             start['value'] = None
             start['end_x'] = curr['x']
             start['end_y'] = curr['y']
@@ -277,12 +281,14 @@ class Parser:
                 start['subtype'] = "ref"
             if start['type'] == "action":
                 start["subtype"] = "list2list"
+                start["applies_to"] = "list"
                 start["command"] = copy.deepcopy(self.command_map[str(start["vert_value"])])
-                if "list_name" in start['command']:
-                    start['command']['name'] = start['command']['list_name']
-                if "list_note" in start['command']:
-                    start['command']['note'] = start['command']['list_note']
+                if "list" in start['command']:
+                    start['command'] = start['command']['list']
         else:
+
+            # DATA or ACTION to a val:
+
             if start['type'] == "data":
                 start['subtype'] = "value"
                 start["vert_value"] = None
@@ -291,16 +297,15 @@ class Parser:
                 start["command"] = copy.deepcopy(self.command_map[str(start["vert_value"])])
                 if next_dir in ("right", "left"):
                     start['subtype'] = "list"
-                    if "list_name" in start['command']:
-                        start['command']['name'] = start['command']['list_name']
-                    if "list_note" in start['command']:
-                        start['command']['note'] = start['command']['list_note']
+                    if "list" in start['command']:
+                        start['command'] = start['command']['list']
                 else:
                     start['subtype'] = "element"
-                if "list_name" in start['command']:
-                    del start['command']['list_name']
-                if "list_note" in start['command']:
-                    del start['command']['list_note']
+
+        # at this point, we've either used the list version or not, and can get rid of the additional reading
+
+        if "command" in start and "list" in start["command"]:
+            del start["command"]["list"]
 
 
     def _lex_glyph(self, glyph):
@@ -410,7 +415,7 @@ class Parser:
             *[len(i['glyph'][0]) for i in glyphs] \
         )
         for num in range(2, primes_to_count ** 2):
-            if all(num%i!=0 for i in range(2,int(math.sqrt(num))+1)):
+            if all(num % i != 0 for i in range(2, int(math.sqrt(num)) + 1)):
                 self.primes.append(num)
                 if len(self.primes) >= primes_to_count:
                     break
@@ -582,4 +587,8 @@ class Parser:
 
         # re-arranges and decorates the tokens for each glyph in place
         self._parse_glyphs(glyphs)
+
+        for g in glyphs:
+            g["list_size"] = len(g["glyph"])
+
         return glyphs
