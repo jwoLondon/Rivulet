@@ -3,17 +3,22 @@ from argparse import ArgumentParser
 from enum import Enum
 import json
 import math
-from riv_themes import Themes
+from riv_exceptions import RivuletSyntaxError
 from riv_parser import Parser
 from riv_python_transpiler import PythonTranspiler
 from riv_svg_generator import SvgGenerator
+from riv_themes import Themes
 
 VERSION = "0.3"
 
 class Interpreter:
     "Interpreter for the Rivulet programming language, main entry point"
 
-    Action = Enum('Action', [('rollback', 1), ('jump_out', 2), ('cont', 3), ('repeat', 4)])
+    Action = Enum('Action', [
+        ('rollback', 1),    # undo all changes to state and exit block
+        ('cont', 2),        # continue to next glyph
+        ('repeat', 3)       # repeat the block
+    ])
 
     def __init__(self):
         self.outfile = None
@@ -66,31 +71,33 @@ class Interpreter:
         for idx, g in enumerate(glyphs):
             g["id"] = idx
 
-        parse_tree = self.__treeify_glyphs(json.loads(json.dumps(glyphs)), 1, [])
+        parse_tree = self.treeify_glyphs(json.loads(json.dumps(glyphs)), 1, [])
 
         self.__decorate_blocks(parse_tree, 0, None)
 
         self.__interpret_block(parse_tree, state)
 
 
-    def __treeify_glyphs(self, glyphs, curr_level, tree):
+    def treeify_glyphs(self, glyphs, curr_level, tree):
+        "Reorganize a flat list of glyphs into a tree by level"
         if glyphs[0]["level"] == curr_level:
             tree.append(glyphs.pop(0))
         elif glyphs[0]["level"] > curr_level:
             level = []
             tree.append(level)
-            self.__treeify_glyphs(glyphs, curr_level + 1, level)
+            self.treeify_glyphs(glyphs, curr_level + 1, level)
         else:
             # go back up one level
             return tree
 
         if len(glyphs) > 0:
-            self.__treeify_glyphs(glyphs, curr_level, tree)
+            self.treeify_glyphs(glyphs, curr_level, tree)
 
         return tree
 
 
     def __decorate_blocks(self, block, level, following = None):
+        "for each glyph in a block, link to glyphs that start the block or first fall after it"
         first = None
         for idx, g in enumerate(block):
 
@@ -130,9 +137,9 @@ class Interpreter:
                 action = self.__interpret_glyph(g, state)
                 if action == self.Action.rollback:
                     state = json.loads(json.dumps(rollback_state))
-                    return
-                if action == self.Action.jump_out:
-                    return
+                    return # a rollback also exits the block
+                if action == self.Action.cont:
+                    continue
                 if action == self.Action.repeat:
                     self.__interpret_block(parse_tree, state)
 
@@ -144,11 +151,6 @@ class Interpreter:
         for token in glyph["tokens"]:
             if token["type"] == "question_marker":
                 retval = self.__resolve_question(token, state)
-            # elif token["action"]["command"] == "insert":
-            #     # for insert, we need special treatment
-            #     if token["subtype"] == "value":
-            #         state[token["list"]].insert(token["assign_to_cell"], token["value"])
-                
             else: # is a value or a ref marker
 
                 # if the cell is not in the list, initialize it to zero
@@ -173,7 +175,7 @@ class Interpreter:
                 # find item to apply to
                 if list2list:
                     for i in range(len(state[token["list"]])):
-                        state[token["list"]][i] = self.__resolve_cmd(token, state, state[token["list"]][i], source[i])
+                        state[token["list"]][i] = self.__resolve_cmd(token, state[token["list"]][i], source[i])
                 elif token["action"] is None or "command" not in token["action"]:
                     # defaults to add_assign
                     state[token["list"]][token["assign_to_cell"]] += source
@@ -183,9 +185,9 @@ class Interpreter:
                     state[token["list"]].append(source)
                 elif token["action"]["subtype"] == "list":
                     for i in range(len(state[token["list"]])):
-                        state[token["list"]][i] = self.__resolve_cmd(token, state, state[token["list"]][i], source)
+                        state[token["list"]][i] = self.__resolve_cmd(token, state[token["list"]][i], source)
                 else:
-                    state[token["list"]][token["assign_to_cell"]] = self.__resolve_cmd(token, state, state[token["list"]][token["assign_to_cell"]], source)
+                    state[token["list"]][token["assign_to_cell"]] = self.__resolve_cmd(token, state[token["list"]][token["assign_to_cell"]], source)
 
         if self.verbose:
             print(self.debug.glyph_drawn(glyph["glyph"]))
@@ -196,9 +198,9 @@ class Interpreter:
         return retval
     
 
-    def __resolve_cmd(self, token, state, initial_value, assign_value):
+    def __resolve_cmd(self, token, initial_value, assign_value):
         if not token["action"] or not "command" in token["action"]:
-            raise Exception("No command found in token")
+            raise RivuletSyntaxError("No command found in token")
         
         match token["action"]["command"]:
             case "addition_assignment":
@@ -220,16 +222,24 @@ class Interpreter:
 
 
     def __resolve_question(self, token, state) -> Action:
-        return self.Action.cont
+        retval = self.Action.cont
 
-        # if token["test"] == "less_than_zero":
-        #     test = "<= 0"
-        # else:
-        #     test = "???"
-        # if token["applies_to"] == "list":
-        #     print(f"if list{token['ref_list']} has x: x {test}: roll back")
-        # else:
-        #     print(f"if {token['ref_cell']} {test}: roll back")
+        succeeds = False
+
+        if token["applies_to"] == "cell":
+            succeeds = state[token["ref_cell"][0]][token["ref_cell"][1]] > 0
+        elif token["applies_to"] == "list":
+            succeeds = all(i > 0 for i in state[token["ref_list"]])
+        else:
+            raise RivuletSyntaxError("Could not determine what question marker applies to")
+
+        if succeeds:
+            if token["block_type"] == "while":
+                retval = self.Action.repeat
+        else:
+            retval = self.Action.rollback
+
+        return retval
 
 
 if __name__ == "__main__":

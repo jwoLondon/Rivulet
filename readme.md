@@ -211,9 +211,9 @@ Question lines always fail if an item is less than or equal to zero.
 
 | Top Line | Bottom Line | Use | Checks
 | --- | --- | --- | --- |
-| Left | Left | If | Any item (for list)
-| Left | Right | While | All items
-| Right | Left | If | Any
-| Right | Right | If | All
+| Left | Horizontal | If | List (all items)
+| Left | Vertical | If | Cell
+| Right | Horizontal | While | List
+| Right | Vertical | While | Cell
 
 (any) vs (all) are equivalent if testing only a single cell

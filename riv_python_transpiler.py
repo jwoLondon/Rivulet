@@ -57,10 +57,8 @@ class PythonTranspiler:
         a(f"level: {glyph["level"]}",True)
         for token in glyph["tokens"]:
             if token["type"] == "question_marker":
-                if token["test"] == "less_than_zero":
-                    test = "<= 0"
-                else:
-                    test = "???"
+                a(f"block_type = {token["block_type"]}")
+                test = "<= 0"
                 if token["applies_to"] == "list":
                     a(f"if (list{token['ref_list']}) has x: x {test}: roll back")
                 else:

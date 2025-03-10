@@ -270,6 +270,8 @@ def test_correct_lists_for_cells():
     assert block["tokens"][2]["list"] == 2
     assert block["tokens"][3]["list"] == 2
 
+# Action Strands
+
 action_strand_with_list_interpretation = """
  1 ╵╵     ╭───╮
  2    ╴─╮╶╯╶╮ ╷
@@ -383,6 +385,8 @@ def test_action_strand_second_ref_cell():
 
     assert block["tokens"][1]["ref_cell"] == [2, 2]
 
+# Question Strands
+
 question_strand_glyph = '''╵╵ ──╮  ╭─╮╭───╮
    ╰─╯╰─╯ │╰──╮╷
    ╰─╮   ─╯ ╷╶╯
@@ -412,3 +416,32 @@ def test_question_strand_apply_to_list():
     print(block)
     assert block["tokens"][4]["end_pos"] == "vertical"
     assert block["tokens"][4]["applies_to"] == "cell"
+
+
+question_strand_vert1 = '''╵        ╷
+     ╭─╮ │   
+ ╭─╮ │ │ │
+ │ │ ╷ │ │ 
+ │ ╰─╯ ╰─╯  ╷
+'''
+def test_question_strand_if_1():
+    parser = Parser()
+    block = parser.parse_program(str(question_strand_vert1))[0]
+    print(block)
+    assert block["tokens"][0]["applies_to"] == "cell"
+    assert block["tokens"][0]["block_type"] == "if"
+    assert block["tokens"][0]["ref_cell"] == [1, 0]
+
+question_strand_while_vert = '''╵  ╷
+   │ ╭─╮     
+   │ │ ╷  
+   ╰─╯ │
+    ───╯ ╷
+'''
+def test_question_strand_while_1():
+    parser = Parser()
+    block = parser.parse_program(str(question_strand_while_vert))[0]
+    print(block)
+    assert block["tokens"][0]["applies_to"] == "list"
+    assert block["tokens"][0]["block_type"] == "while"
+    assert block["tokens"][0]["ref_list"] == 3

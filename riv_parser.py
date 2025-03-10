@@ -492,11 +492,11 @@ class Parser:
                     first_qm = token
                     if token["x"] < token["end_x"]:
                         token["position"] = "right"
-                        token["test"] = "???"
+                        token["block_type"] = "while"
                         # FIXME: What is the meaning of a rightward movement?
                     else:
                         token["position"] = "left"
-                        token["test"] = "less_than_zero"
+                        token["block_type"] = "if"
                 elif idx == 1:
                     token["subtype"] = "second"
                     if first_qm["end_x"] != token["x"] or first_qm["end_y"] != token["y"]:
