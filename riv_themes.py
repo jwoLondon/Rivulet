@@ -18,7 +18,7 @@ Themes = {
     "synth": SvgGenerator.Parameters({
         "bg_pattern": SvgGenerator.BgPattern['blank'], 
         "bg_color": "#2d2725", 
-        "color_set": ["#f22c40","#df5320","#c38418","#7b9726","#00ad9c","#407ee7","#6666ea","#c33ff3"],
+        "color_set": ["#f22c40","#c38418","#00ad9c","#df5320","#7b9726","#407ee7","#6666ea","#c33ff3"],
         "stroke_linecap": "round",
         "glyph_marker": "#407ee7",
     }),

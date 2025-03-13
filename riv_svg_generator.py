@@ -54,7 +54,7 @@ class SvgGenerator:
             outfile = "out/output.svg" # this should increment probly
 
         x_off = 0 # currently assumes vertical layout
-        y_off = self.p.cell_height
+        y_off = 1 #self.p.cell_height
 
         glyph_widths = []
 
@@ -71,7 +71,7 @@ class SvgGenerator:
             widths = []
             x_off = 0
 
-            glyph_width = len(x["glyph"][0])
+            glyph_width = len(glyph["glyph"][0])
 
             if x_off + glyph_width > 30:
                 x_off = 0

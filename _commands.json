@@ -24,9 +24,11 @@
         {"name": "division_assignment",
         "note": "add/subtract, similar to the default addition_assignment"},
     "3": {
+        "name": "pop",
+        "note": "addition_assignment. for ref, also remove cell from ref_list",
         "list": {
-            "name": "addition_assignment",
-            "note": "add to location, set to zero by default"
+            "name": "pop_and_append",
+            "note": "pop from ref_list and append to act_list"
         }
     },
     "-3":

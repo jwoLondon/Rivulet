@@ -72,6 +72,10 @@ class PythonTranspiler:
                     a(f"list{token['list']} append ")
                 elif token["action"]["command"] == "insert":
                     a(f"list{token['list']} after cell {token['assign_to_cell']} insert ")
+                elif token["action"]["command"] == "pop":
+                    a(f"list{token["list"]}[{token['assign_to_cell']}] (pops) += ")
+                elif token["action"]["command"] == "pop_and_append":
+                    a(f"list{token["list"]} pop/appends ")
                 else:
                     a(f"list{token['list']}[{token['assign_to_cell']}] += ")
             elif token["subtype"] in ("list2list","list"):
@@ -105,10 +109,11 @@ class PythonTranspiler:
         for idx, glyph in enumerate(parse_tree):
             retstr += f"\nglyph {idx}\n"
 
-        retstr += self.glyph_drawn(glyph["glyph"])
-        retstr += "GLYPH_SUMMARY\n"
-        retstr += self.glyph_pseudo(glyph)
-        # retstr += "\nSTRAND SUMMARY\n"
-        # retstr += self.print_glyph_debug(glyph)
+            retstr += self.glyph_drawn(glyph["glyph"])
+            retstr += "GLYPH_SUMMARY\n"
+            retstr += self.glyph_pseudo(glyph)
+            if pseudo:
+                retstr += "\nSTRAND SUMMARY\n"
+                retstr += self.print_glyph_debug(glyph)
 
         print(retstr)

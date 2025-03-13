@@ -257,8 +257,8 @@ class Parser:
     def _mark_end(self, start, curr, next_dir, prev, readings):
         "Determine what kind of strand we have and null out anything irrelevant to its reading"
 
-        if start["x"] == 31:
-            print("")
+        # if start["x"] == 31:
+        #     print("")
 
         if start["type"] == "question_marker":
             start['end_x'] = curr['x']
@@ -294,6 +294,8 @@ class Parser:
                 start["vert_value"] = None
             if start['type'] == "action":
                 start["value"] = None
+                if not str(start["vert_value"]) in self.command_map:
+                    raise RivuletSyntaxError(f"Command not found for {start['vert_value']}")
                 start["command"] = copy.deepcopy(self.command_map[str(start["vert_value"])])
                 if next_dir in ("right", "left"):
                     start['subtype'] = "list"

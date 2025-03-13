@@ -6,17 +6,30 @@
 Rivulet is a programming language of flowing strands, written in semigraphic characters. A strand is not pictographic: its flow does not simulate computation. There are four kinds of strands, each with their own symbolism and grammatical rules. Together, they form glyphs, tightly-packed blocks of code whose strands execute together.
 
 Here is a complete Fibonacci program:
+```
+   ╵──╮───╮╭─    ╵╵╭────────╮
+    ╰─╯╰──╯│       ╰─╶ ╶╮╶╮╶╯
+   ╰─────╮ │      ╭─────╯ ╰─────╮
+         ╰─╯ ╷    ╰───       ───╯╷
 
-    ╵  ──╮ ───╮ ──╮    ╵╵   ╭──╮         ╭─ ╶╮      ╵╵ ──╮  ╭─╮
-       ╰─╯ ╰──╯ ╰─╯╶╮  ╴─╮╵ │  ╰─╮╶╮ ╵╶╮╶╯ ╭─╯ ╴─╮     ╰─╯╰─╯ │ ╭─╶
-            ╭───────╯    ││ │╵╰──┘ ╰─╯ │╭──┘ ╭╴ ╶╯     ╰─╮   ─╯╶╯ ╷
-            ╰──╮         │╰─╯╰─────────╯│    │   ╭╴   ╭──╯╭─╮ ╭─╮ │
-               ╰─── ╷    ╰──────╮   ╭───╯ ─╮ │   │    ╰─  │ │ │ │ │
-                         ╭─╮ ╭╴ │   │ ╭╴   │ │ │ │    ╭─╮ │ │ ╷ ╰─╯
-                         │ │ │  ╰───╯ │ │  ╰─╯ ╰─╯    │ ╰─╯ ╰─╯   ╷
-                       │ │ ╰─╯        │ │  
-                       ╰─╯            ╰─╯         ╷                
+   ╵╵─╮  ╭─╮     ╭──       ╵╵╰─╮  ──╮──╮
+      ╰─╮│ ╰─╯ ╵╵╰─╯╶╮       ╴─╯  ╭─╯╭─╯
+      ╰─╯╰─ ╰──╯╰────╯       ╭╴ ╵╶╯ ╶╯╶╮
+        ╭─╮ ╭╴               │  ╰──────╯
+        │ │ │                ╰─╮       ╭─╮ 
+      │ │ ╰─╯                  │     │   │
+      ╰─╯            ╷         ╰──── ╰───╯╷
 
+   ╵╵ ╭──  ──╮  ╭─╮         ╵╰─╮
+      ╰─╮  ╭─╯╭─╯ │          ╴─╯
+       ╶╯╵╶╯  │ ╷╶╯          ╭─╮
+     ╭─╮ ╰────╯ │   ╭─╮        │
+     │ ╰────╮ ╭─╯ ╭╴│ │      ╭─╯
+     ╰────╮ │ │ │ │ │ │      │
+     ╭────╯ │ │ ╰─╯ │ ╷      ╰─╷
+     ╰────╮ │ ╰─────╯ │  
+          │ ╰─────────╯╷
+```
 | :warning: WARNING          |
 |:---------------------------|
 | **Status: Version 0.3**. This is a mostly-working parser, a somewhat working interpreter, and a tool to generate svg files of source code. |
