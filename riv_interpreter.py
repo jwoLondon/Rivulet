@@ -228,7 +228,7 @@ class Interpreter:
     def __resolve_cmd(self, token, initial_value, assign_value):
         if not token["action"] or not "command" in token["action"]:
             raise RivuletSyntaxError("No command found in token")
-        
+
         match token["action"]["command"]:
             case "addition_assignment":
                 return initial_value + assign_value
@@ -281,7 +281,7 @@ if __name__ == "__main__":
     arg_parser.add_argument('-v', dest='verbose', action='store_true',
                         default=False, help='verbose logging')
     arg_parser.add_argument('--svg', dest='svg', action='store_true', default=False,
-                        help='generate svg of program')
+                        help='generate svg of program, then exit')
     arg_parser.add_argument('--theme', dest='color_set', default="default", help="color scheme for svg")
     args = arg_parser.parse_args()
 
@@ -289,8 +289,9 @@ if __name__ == "__main__":
 
     if (args.print):
         intr.print_and_exit(args.progfile)
+        exit(0)
     if (args.svg):
         intr.draw_svg(args.progfile, args.color_set)
+        exit(0)
 
-    else:
-        print(intr.interpret_file(args.progfile, args.verbose, args.color_set))
+    intr.interpret_file(args.progfile, args.verbose, args.color_set)

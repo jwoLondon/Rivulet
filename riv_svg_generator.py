@@ -77,6 +77,7 @@ class SvgGenerator:
                 x_off = 0
                 y_off += 1
 
+            # opening glyph marker
             for i in range(0, glyph["level"]):
                 d = []
                 d.append(svg.M(x_off * self.p.cell_width, y_off * self.p.cell_height))
@@ -126,9 +127,9 @@ class SvgGenerator:
                     )
                 )
 
-            # add closing glyph marker
+            # closing glyph marker
             d = []
-            d.append(svg.M(max(widths) * self.p.cell_width, (y_off + len(glyph["glyph"]) - 1) * self.p.cell_height))
+            d.append(svg.M((glyph["end_loc"][1] + 0.5) * self.p.cell_width, (y_off + len(glyph["glyph"]) - 1) * self.p.cell_height))
             self._add_start_spacing(d, .5, .5)
             d.append(svg.v(self.p.cell_height/2))
             elements.append(
@@ -155,7 +156,7 @@ class SvgGenerator:
                     elements.append(svg.Line(x1=0, y1=self.p.cell_height * y, x2=(max(glyph_widths) + 4) * self.p.cell_width, y2=self.p.cell_height * y, stroke=self.p.line_color, stroke_opacity=self.p.line_opacity, stroke_width=self.p.line_width))
 
         canvas = svg.SVG(
-            width=(max(glyph_widths) + 4) * self.p.cell_width,
+            width=(max(glyph_widths) + 8) * self.p.cell_width,
             height=y_off * self.p.cell_height,
             elements=elements,
             style="background-color:" + self.p.bg_color,
@@ -212,7 +213,6 @@ class SvgGenerator:
                 if start:
                     self._add_start_spacing(d, .5, 0)
                 self._add_curve(d, 0, 1, 1, 1, SvgGenerator.dir['down'], SvgGenerator.dir['right'])
-
                 widths.append(widths[-1] + 1)
             elif dir == "up":
                 if start:
@@ -346,6 +346,7 @@ class SvgGenerator:
             if dir == "right":
                 self._add_start_spacing(d, 0.5, 0)
                 d.append(svg.h(self.p.cell_width))
+                widths.append(widths[-1] + 1)
             elif dir == "left":
                 self._add_start_spacing(d, .5, .5)
                 d.append(svg.v(0-self.p.cell_height/2))

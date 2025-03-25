@@ -90,7 +90,7 @@ class Parser:
 
             # all neighbor's readings
             nbr_reads = [l["readings"] for l in self.lexicon if neighbor in l["symbol"]]
-            if not nbr_reads:
+            if not nbr_reads or (glyph[y][x] == neighbor and (neighbor == "╷" or neighbor == "╵")):
                 continue
 
             # we ignore pre_start as it is decorative and adds no value
@@ -445,7 +445,7 @@ class Parser:
                 glyph[0][i] = ' '
             glyph[-1][-1] = ' '
 
-            block_tree.append({"level":g["level"], "glyph":glyph})
+            block_tree.append({"level":g["level"], "end_loc":[len(glyph), len(glyph[-1])], "glyph":glyph})
 
         return block_tree
 
@@ -495,7 +495,6 @@ class Parser:
                     if token["x"] < token["end_x"]:
                         token["position"] = "right"
                         token["block_type"] = "while"
-                        # FIXME: What is the meaning of a rightward movement?
                     else:
                         token["position"] = "left"
                         token["block_type"] = "if"

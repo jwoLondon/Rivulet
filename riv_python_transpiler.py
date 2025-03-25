@@ -66,6 +66,14 @@ class PythonTranspiler:
             elif token["action"] and "command" in token["action"]:
                 if token["action"]["command"] == "subtraction_assignment":
                     a(f"list{token['list']}[{token['assign_to_cell']}] -= ")
+                elif token["action"]["command"] == "multiplication_assignment":
+                    a(f"list{token['list']}[{token['assign_to_cell']}] *= ")
+                elif token["action"]["command"] == "division_assignment":
+                    a(f"list{token['list']}[{token['assign_to_cell']}] /= ")
+                elif token["action"]["command"] == "mod_assignment":
+                    a(f"list{token['list']}[{token['assign_to_cell']}] %= ")
+                elif token["action"]["command"] == "exponent_assignment":
+                    a(f"list{token['list']}[{token['assign_to_cell']}] ^= ")
                 elif token["action"]["command"] == "overwrite":
                     a(f"list{token['list']}[{token['assign_to_cell']}] = ")
                 elif token["action"]["command"] == "append":
