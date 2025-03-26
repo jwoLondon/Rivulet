@@ -33,9 +33,10 @@ Here is a complete Fibonacci program:
 
 Here is the same program formatted by the interpreter into an svg, alongside two variations that produce equivalent computer instructions: 
 
-<img src="images/fibonacci1.png" width=32% height=32%>
-<img src="images/fibonacci2.png" width=32% height=32%>
-<img src="images/fibonacci4.png" width=32% height=32%>
+<img src="images/fibonacci1.png" width=32% height=32% style="float:left">
+<img src="images/fibonacci2.png" width=32% height=32% style="float:left">
+<img src="images/fibonacci4.png" width=32% height=32% style="float:left">
+<br clear="both">
 
 | :warning: WARNING          |
 |:---------------------------|
