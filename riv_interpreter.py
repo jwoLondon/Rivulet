@@ -9,7 +9,7 @@ from riv_python_transpiler import PythonTranspiler
 from riv_svg_generator import SvgGenerator
 from riv_themes import Themes
 
-VERSION = "0.3"
+VERSION = "0.4"
 
 class Interpreter:
     "Interpreter for the Rivulet programming language, main entry point"

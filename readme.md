@@ -30,9 +30,16 @@ Here is a complete Fibonacci program:
      ╰────╮ │ ╰─────╯ │  
           │ ╰─────────╯╷
 ```
+
+Here is the same program formatted by the interpreter into an svg, alongside two variations that produce equivalent computer instructions: 
+
+<img src="images/fibonacci1.png" width=32% height=32%>
+<img src="images/fibonacci2.png" width=32% height=32%>
+<img src="images/fibonacci4.png" width=32% height=32%>
+
 | :warning: WARNING          |
 |:---------------------------|
-| **Status: Version 0.3**. This is a mostly-working parser, a somewhat working interpreter, and a tool to generate svg files of source code. |
+| **Status: Version 0.4**. This is a mostly-working interpreter, and a tool to generate svg files of source code. The command list will likely need to expand for usability. |
 
 ## Design Philosophy
 
