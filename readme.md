@@ -1,4 +1,4 @@
-![Python versions](https://img.shields.io/badge/Python-3.12-blue)
+![Python versions](https://img.shields.io/badge/Python-3.13-blue)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 
 # Rivulet
@@ -126,7 +126,7 @@ Rivulet commands are written with these signs. Some re-use characters in a way t
 
 ### Value Strands
 
-A value strand indicates a command that takes a constant value. Value strands (and other data strands), begin with a hook that points up (as in the third strand below) or to the left (as in the first two). All three of the strands below are value strands:
+A value strand indicates a command that takes a constant value. Value strands (and other data strands), begin with a hook that points up (as in the first two strands below) or to the left (as in the third). All three of the strands below are value strands:
 
     1 ╵╰──╮╭──╯╶╮
     2    ─┘└─   └─╮
