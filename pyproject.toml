@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rivulet"
+dynamic = ["version", "dependencies", "readme"]
+requires-python = ">=3.12"
+
+[project.scripts]
+riv = "rivulet.riv_interpreter:main"
+
+[project.urls]
+Repository = "https://github.com/rottytooth/Rivulet"
+Issues = "https://github.com/rottytooth/Rivulet/issues"
+
+[tool.setuptools]
+packages = ["rivulet"]
+package-data.rivulet = [ "*.json" ]
+
+[tool.setuptools.dynamic]
+version = { attr = "rivulet.__version__" }
+dependencies = { file = "requirements.txt" }
+readme = { file = "readme.md" }

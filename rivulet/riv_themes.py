@@ -1,4 +1,4 @@
-from riv_svg_generator import SvgGenerator
+from rivulet.riv_svg_generator import SvgGenerator
 
 
 Themes = {

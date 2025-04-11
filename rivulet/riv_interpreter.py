@@ -3,13 +3,14 @@ from argparse import ArgumentParser
 from enum import Enum
 import json
 import math
-from riv_exceptions import RivuletSyntaxError
-from riv_parser import Parser
-from riv_python_transpiler import PythonTranspiler
-from riv_svg_generator import SvgGenerator
-from riv_themes import Themes
+from rivulet.riv_exceptions import RivuletSyntaxError
+from rivulet.riv_parser import Parser
+from rivulet.riv_python_transpiler import PythonTranspiler
+from rivulet.riv_svg_generator import SvgGenerator
+from rivulet.riv_themes import Themes
+from rivulet import __version__
 
-VERSION = "0.4"
+VERSION = __version__
 
 class Interpreter:
     "Interpreter for the Rivulet programming language, main entry point"
@@ -269,7 +270,7 @@ class Interpreter:
         return retval
 
 
-if __name__ == "__main__":
+def main():
 
     arg_parser = ArgumentParser(description=f'Rivulet Interpreter {VERSION}',
                             epilog='More at https://danieltemkin.com/Esolangs/Rivulet')
@@ -295,3 +296,6 @@ if __name__ == "__main__":
         exit(0)
 
     intr.interpret_file(args.progfile, args.verbose, args.color_set)
+
+if __name__ == "__main__":
+    main()

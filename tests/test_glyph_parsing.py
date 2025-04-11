@@ -4,7 +4,7 @@ Test glyph full parsing
 """
 import copy
 import pytest
-from riv_parser import Parser
+from rivulet.riv_parser import Parser
 
 glyph_with_one_list = """
 ╵╰──╮╰─╮╰─╮╰─╮
