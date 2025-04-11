@@ -4,11 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rivulet"
-dynamic = ["version"]
+dynamic = ["version", "dependencies", "readme"]
 
 [project.scripts]
 riv = "rivulet.riv_interpreter:main"
 
 [tool.setuptools]
 packages = ["rivulet"]
-dynamic.version = { attr = "rivulet.__version__" }
+
+[tool.setuptools.dynamic]
+version = { attr = "rivulet.__version__" }
+dependencies = { file = "requirements.txt" }
+readme = { file = "readme.md" }
