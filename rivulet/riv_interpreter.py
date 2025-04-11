@@ -8,8 +8,9 @@ from rivulet.riv_parser import Parser
 from rivulet.riv_python_transpiler import PythonTranspiler
 from rivulet.riv_svg_generator import SvgGenerator
 from rivulet.riv_themes import Themes
+from rivulet import __version__
 
-VERSION = "0.4"
+VERSION = __version__
 
 class Interpreter:
     "Interpreter for the Rivulet programming language, main entry point"
