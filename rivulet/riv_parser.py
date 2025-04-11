@@ -1,6 +1,8 @@
 import copy
 import json
 import math
+import rivulet
+from pathlib import Path
 from rivulet.riv_exceptions import InternalError, RivuletSyntaxError
 # pylint: disable=locally-disabled, fixme, line-too-long
 
@@ -23,9 +25,10 @@ class Parser:
     "Parser for the Rivulet esolang"
 
     def __init__(self):
-        with open('_lexicon.json', encoding='utf-8') as lex:
+        here = Path(rivulet.__path__[0])
+        with open(here / '_lexicon.json', encoding='utf-8') as lex:
             self.lexicon = json.load(lex)
-        with open('_commands.json', encoding='utf-8') as cmds:
+        with open(here / '_commands.json', encoding='utf-8') as cmds:
             self.command_map = json.load(cmds)
 
         # convert all directions to lists (some are just strings)

@@ -11,6 +11,7 @@ riv = "rivulet.riv_interpreter:main"
 
 [tool.setuptools]
 packages = ["rivulet"]
+package-data.rivulet = [ "*.json" ]
 
 [tool.setuptools.dynamic]
 version = { attr = "rivulet.__version__" }
