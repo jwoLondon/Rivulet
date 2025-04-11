@@ -10,6 +10,10 @@ requires-python = ">=3.12"
 [project.scripts]
 riv = "rivulet.riv_interpreter:main"
 
+[project.urls]
+Repository = "https://github.com/rottytooth/Rivulet"
+Issues = "https://github.com/rottytooth/Rivulet/issues"
+
 [tool.setuptools]
 packages = ["rivulet"]
 package-data.rivulet = [ "*.json" ]
