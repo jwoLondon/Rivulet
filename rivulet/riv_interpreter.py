@@ -3,11 +3,11 @@ from argparse import ArgumentParser
 from enum import Enum
 import json
 import math
-from riv_exceptions import RivuletSyntaxError
-from riv_parser import Parser
-from riv_python_transpiler import PythonTranspiler
-from riv_svg_generator import SvgGenerator
-from riv_themes import Themes
+from rivulet.riv_exceptions import RivuletSyntaxError
+from rivulet.riv_parser import Parser
+from rivulet.riv_python_transpiler import PythonTranspiler
+from rivulet.riv_svg_generator import SvgGenerator
+from rivulet.riv_themes import Themes
 
 VERSION = "0.4"
 

@@ -1,7 +1,7 @@
 import copy
 import json
 import math
-from riv_exceptions import InternalError, RivuletSyntaxError
+from rivulet.riv_exceptions import InternalError, RivuletSyntaxError
 # pylint: disable=locally-disabled, fixme, line-too-long
 
 VERSION = "0.1"
