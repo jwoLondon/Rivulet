@@ -269,7 +269,7 @@ class Interpreter:
         return retval
 
 
-if __name__ == "__main__":
+def main():
 
     arg_parser = ArgumentParser(description=f'Rivulet Interpreter {VERSION}',
                             epilog='More at https://danieltemkin.com/Esolangs/Rivulet')
@@ -295,3 +295,6 @@ if __name__ == "__main__":
         exit(0)
 
     intr.interpret_file(args.progfile, args.verbose, args.color_set)
+
+if __name__ == "__main__":
+    main()
