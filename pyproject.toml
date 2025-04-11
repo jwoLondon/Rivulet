@@ -1,0 +1,14 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rivulet"
+dynamic = ["version"]
+
+[project.scripts]
+riv = "rivulet.riv_interpreter:main"
+
+[tool.setuptools]
+packages = ["rivulet"]
+dynamic.version = { attr = "rivulet.__version__" }
