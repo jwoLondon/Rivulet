@@ -6,3 +6,12 @@ __pycache__
 out
 out/*
 zine/*
+
+bin
+include
+lib
+lib64
+venv
+.venv
+pyvenv.cfg
+*.egg-info/
