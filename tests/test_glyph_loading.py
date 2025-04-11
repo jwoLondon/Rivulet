@@ -4,7 +4,7 @@ Test glyph locating and separation
 """
 import copy
 import pytest
-from riv_parser import Parser
+from rivulet.riv_parser import Parser
 
 def _prepare(glyph):
     glyph = copy.deepcopy(glyph)

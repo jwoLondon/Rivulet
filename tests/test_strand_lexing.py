@@ -4,7 +4,7 @@ Test strand analysis in lexer
 """
 import copy
 import pytest
-from riv_parser import Parser
+from rivulet.riv_parser import Parser
 
 zeroes_st_glyph = """
   ╰──╮ ╭───╯╭──╯

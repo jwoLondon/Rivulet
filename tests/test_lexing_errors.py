@@ -4,8 +4,8 @@ Test appropriate responses for Syntax Errors
 """
 import copy
 import pytest
-from riv_parser import Parser
-from riv_exceptions import InternalError, RivuletSyntaxError
+from rivulet.riv_parser import Parser
+from rivulet.riv_exceptions import InternalError, RivuletSyntaxError
 
 no_glyph = """
 ╰─╮

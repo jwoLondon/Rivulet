@@ -4,7 +4,7 @@ Test glyph full parsing
 """
 import copy
 import pytest
-from riv_interpreter import Interpreter
+from rivulet.riv_interpreter import Interpreter
 
 def test_treeify_1_3_3():
     set_one = [
