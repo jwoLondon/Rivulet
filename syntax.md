@@ -1,20 +1,17 @@
 # Syntax Reference
 
 ## Table of Contents
-- [Design Philosophy](#design-philosophy)
-- [Data Model](#data-model)
-- [Control Flow](#control-flow)
-- [Syntax](#syntax)
-   - [Lexemes](#lexemes)
-   - [Glyphs](#glyphs)
-   - [Lines of code](#lines-of-code)
-   - [Data Strands](#data-strands)
-       - [Value Strands](#value-strands)
-       - [Reference Strands](#reference-strands)
-   - [Action Strands](#action-strands)
-       - [List Indicator](#list-indicator)
-       - [List 2 List](#list-2-list)
-   - [Question Strand Sets](#question-strand-sets)
+
+- [Lexemes](#lexemes)
+- [Glyphs](#glyphs)
+- [Lines of code](#lines-of-code)
+- [Data Strands](#data-strands)
+    - [Value Strands](#value-strands)
+    - [Reference Strands](#reference-strands)
+- [Action Strands](#action-strands)
+    - [List Indicator](#list-indicator)
+    - [List 2 List](#list-2-list)
+- [Question Strand Sets](#question-strand-sets)
 
 Rivulet's nuanced grammar may seem overwhelming at first but becomes easy to read and write with practice.
 
