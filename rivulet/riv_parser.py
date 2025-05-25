@@ -509,7 +509,7 @@ class Parser:
                     first_qm["end_pos"] = last_marker_type["name"]
                     if first_qm["end_pos"] == "horizontal":
                         first_qm["applies_to"] = "list"
-                        first_qm["ref_list"] = 3 # FIXME: wtf????
+                        first_qm["ref_list"] = first_qm["ref_cell"][0]
                         del first_qm["ref_cell"]
                     else:
                         first_qm["applies_to"] = "cell"

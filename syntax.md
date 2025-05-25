@@ -12,6 +12,7 @@
     - [List Indicator](#list-indicator)
     - [List 2 List](#list-2-list)
 - [Question Strand Sets](#question-strand-sets)
+    - [Question for List vs Cell](#question-for-list-vs-cell)
 
 Rivulet's nuanced grammar may seem overwhelming at first but becomes easy to read and write with practice.
 
@@ -142,9 +143,13 @@ The action strands each have a value of 4, which corresponds to exponentiation_a
 | 2 | multiplication assignment | |
 | -2 | division assignment | |
 | 3 | pop / pop_and_append | Removes from source list. With a list indicator, it pops from the assignee  |
-| -3 | mod assignment | modulus of cell value against supplied argument |
+| -3 | addition_assignment | only for list indicators. Used when an action strand is needed
 | 4 | exponentiation assignment | raise to power of supplied argument" |
 | -4 | root assignment | take root at power of supplied argument |
+| 5 | mod assignment | modulus of cell value against supplied argument |
+| -5 | reverse mod assignment | modulus of supplied argument against cell value |
+| 6 | reverse subtraction | supplied argument minus cell value |
+| -6 | reverse division | |
 
 
 :WARNING: It is every-other-line that increments between the primes, as the vertical length for a block-drawing char is longer than their horizontal length. This sounds confusing but is usually clear visually.
@@ -169,9 +174,9 @@ Action strands can also mark that a command applies not to a single cell (as is 
  1 ╵  ╶╮  ╶╮  ╶╮  ╶╮  ╶╮       
  2     ╰── ╰── ╰── ╰── │
  3  ╭── ╭──────────────╯
- 5  │ ╭─╯              ╭╴
- 7  │ ╷    ╶╮       ─╮ │
-11  │   ╭───╯        │ │
+ 5  │ ┌─╯              ╭╴
+ 7  │ ╷    ╶╮       ─┐ │
+11  │   ┌───╯        │ │
 13  │   ╷ ╶╮         ╰─╯
 17  ╰──────╯            ╷
 ```
@@ -264,13 +269,17 @@ The bottom question strand begins directly above its partner. It too ends either
 
 Question strands, read only by their beginning vs end, can move back and forth through the glyph, filling in blank spaces. They are often decorative, gap-filling lines.
 
-Question lines always fail if an item is less than or equal to zero.
-
 | Top Line | Bottom Line | Use | Checks
 | --- | --- | --- | --- |
-| Left | Horizontal | If | List (all items)
+| Left | Horizontal | If | List
 | Left | Vertical | If | Cell
 | Right | Horizontal | While | List
 | Right | Vertical | While | Cell
 
-(any) vs (all) are equivalent if testing only a single cell
+### Question for List vs Cell
+
+If testing a cell, a zero or negative value will be considered `failed` and initiate a rollback. Any positive value succeeds.
+
+Testing a list is more complex. Lists can contain zeroes that are not anticipated or explicitly added by the programmer. Zeroes are placeholders, often used in the place of `null`, which does not exist in Rivulet. A list is implied to contain an infinite number of zeroes following its last value; they are simply not followed if they were not expliticly added and don't have explicit values after them.
+
+A test on a list will return `failed` and rollback if it is entirely empty or only populated by zeroes. If a list has any negative values, it will also trigger a rollback. In any other condition, it returns `succeeded`.
